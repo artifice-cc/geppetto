@@ -43,19 +43,18 @@
   "Only sends the last results from each simulation."
   [run-meta all-results]
   (with-db @granary-db
-    (transaction
-     (let [runid (add-run run-meta)]
-       (when runid
-         (doseq [sim-results all-results]
-           (let [control-params (or (:control-params
-                                     (last (:control sim-results)))
-                                    (:params (last (:control sim-results))))
-                 comparison-params (:comparison-params
-                                    (last (:comparison sim-results)))
-                 simid (add-simulation runid control-params comparison-params)]
-             (doseq [resultstype [:control :comparison :comparative]]
-               (when (resultstype sim-results)
-                 (add-sim-results simid resultstype (last (resultstype sim-results))))))))))))
+    (let [runid (add-run run-meta)]
+      (when runid
+        (doseq [sim-results all-results]
+          (let [control-params (or (:control-params
+                                    (last (:control sim-results)))
+                                   (:params (last (:control sim-results))))
+                comparison-params (:comparison-params
+                                   (last (:comparison sim-results)))
+                simid (add-simulation runid control-params comparison-params)]
+            (doseq [resultstype [:control :comparison :comparative]]
+              (when (resultstype sim-results)
+                (add-sim-results simid resultstype (last (resultstype sim-results)))))))))))
 
 (defn get-run
   [runid]
