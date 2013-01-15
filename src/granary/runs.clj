@@ -22,17 +22,20 @@
 (defn add-sim-results
   [simid resultstype results]
   (with-db @granary-db
-    (let [rs (dissoc results :control-params :comparison-params :params :simulation)]
-      (doseq [[field val] rs]
-        (let [entry {:simid simid :resultstype (name resultstype)
-                     :field (name field)}
-              entry-typed (cond (= Double (type val))
-                                (assoc entry :valtype "floatval" :floatval val)
-                                (= Integer (type val))
-                                (assoc entry :valtype "intval" :intval val)
-                                :else
-                                (assoc entry :valtype "strval" :strval val))]
-          (insert results-fields (values [entry-typed])))))))
+    (let [rs (dissoc results :control-params :comparison-params :params :simulation)
+          vals (for [[field val] rs]
+                 (let [entry {:simid simid :resultstype (name resultstype)
+                              :field (name field)}]
+                   (cond (= Double (type val))
+                         (assoc entry :valtype "floatval" :floatval val
+                                :strval nil :intval nil)
+                         (= Integer (type val))
+                         (assoc entry :valtype "intval" :intval val
+                                :strval nil :floatval nil)
+                         :else
+                         (assoc entry :valtype "strval" :strval val
+                                :intval nil :floatval nil))))]
+      (insert results-fields (values (vec vals))))))
 
 (defn add-run
   "Expected keys in run-meta map: ..."
