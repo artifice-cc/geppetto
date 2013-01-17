@@ -22,7 +22,7 @@
 (defn add-sim-results
   [simid resultstype results]
   (with-db @granary-db
-    (let [rs (dissoc results :control-params :comparison-params :params :simulation)
+    (let [rs (dissoc results :control-params :comparison-params :params)
           vals (for [[field val] rs]
                  (let [entry {:simid simid :resultstype (name resultstype)
                               :field (name field)}]
