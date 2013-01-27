@@ -7,7 +7,7 @@
   "library(RMySQL)
 con <- dbConnect(MySQL(), user='%s', password='%s', dbname='%s', host='%s')
 
-results <- dbGetQuery(con, 'select * from results_fields where simid in (select simid from simulations where runid = %d)')
+results <- dbGetQuery(con, 'select * from results_fields where simid in (select simid from simulations where runid = %d) order by simid')
 
 control <- data.frame()
 comparison <- data.frame()
