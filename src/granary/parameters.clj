@@ -78,7 +78,9 @@
 (defn delete-parameters
   [paramid]
   (with-db @granary-db
-    (delete parameters (where {:paramid paramid}))))
+    (let [ps (get-params paramid)]
+      (when ps
+        (delete parameters (where {:problem (:problem ps) :name (:name ps)}))))))
 
 (defn read-params
   [params-string]
