@@ -112,4 +112,4 @@
 
 (defn params-pairable?
   [params1 params2]
-  (= (set (keys params1) (keys params2))))
+  (= (set (keys params1)) (set (keys params2))))
