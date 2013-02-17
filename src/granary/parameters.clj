@@ -1,5 +1,5 @@
 (ns granary.parameters
-  (:require [clojure.contrib.string :as str])
+  (:require [clojure.string :as str])
   (:use [korma.core])
   (:use [granary.models])
   (:use [granary.misc]))
@@ -84,7 +84,7 @@
 
 (defn read-params
   [params-string]
-  (let [[problem name] (str/split #"/" params-string)
+  (let [[problem name] (str/split params-string #"/")
         params (get-params problem name)]
     (when params
       [problem (if (:comparison params)
