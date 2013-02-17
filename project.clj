@@ -1,4 +1,4 @@
-(defproject cc.artifice/granary "1.0.0"
+(defproject cc.artifice/granary "1.0.1"
   :description "Backend support such as database connectivity for Sisyphus, Retrospect, Chivalry, and other projects that use the same data."
   :url "http://artifice.cc/granary"
   :license {:name "Eclipse Public License"
