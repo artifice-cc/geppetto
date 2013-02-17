@@ -109,3 +109,7 @@
       (let [p (first params)
             deeper (explode-params (rest params))]
         (flatten (map (fn [v] (map #(assoc % (first p) v) deeper)) (second p)))))))
+
+(defn params-pairable?
+  [params1 params2]
+  (= (set (keys params1) (keys params2))))
