@@ -1,4 +1,4 @@
-(ns granary.git
+(ns geppetto.git
   (:use [clojure.string :only [split-lines trim]])
   (:use [clojure.java.shell :only [sh]]))
 

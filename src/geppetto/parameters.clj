@@ -1,22 +1,22 @@
-(ns granary.parameters
+(ns geppetto.parameters
   (:require [clojure.string :as str])
   (:use [korma.core])
-  (:use [granary.models])
-  (:use [granary.misc]))
+  (:use [geppetto.models])
+  (:use [geppetto.misc]))
 
 (defn get-params
   ([paramid]
-     (first (with-db @granary-db
+     (first (with-db @geppetto-db
               (select parameters (where {:paramid paramid})))))
   ([problem name]
-     (first (with-db @granary-db
+     (first (with-db @geppetto-db
               (select parameters
                       (where {:name name :problem problem})
                       (order :rev :DESC) (limit 1))))))
 
 (defn parameters-latest-rev
   [problem name]
-  (or (:rev (first (with-db @granary-db
+  (or (:rev (first (with-db @geppetto-db
                      (select parameters
                              (fields :rev)
                              (where {:problem problem :name name})
@@ -26,7 +26,7 @@
 
 (defn parameters-latest
   [problem name]
-  (first (with-db @granary-db
+  (first (with-db @geppetto-db
            (select parameters
                    (where {:problem problem :name name})
                    (order :rev :DESC)
@@ -35,7 +35,7 @@
 (defn parameters-latest?
   [paramid]
   (let [{:keys [problem name rev]}
-        (first (with-db @granary-db
+        (first (with-db @geppetto-db
                  (select parameters (fields :problem :name :rev)
                          (where {:paramid paramid}))))]
     (= rev (parameters-latest-rev problem name))))
@@ -44,7 +44,7 @@
 (defn update-parameters
   [params]
   (:generated_key
-   (with-db @granary-db
+   (with-db @geppetto-db
      (insert parameters (values [{:problem (:problem params)
                                   :name (:name params)
                                   :rev (inc (parameters-latest-rev (:problem params)
@@ -61,7 +61,7 @@
 (defn list-parameters
   []
   (let [problem-name-pairs (sort (set (map (fn [{:keys [problem name]}] [problem name])
-                                         (with-db @granary-db
+                                         (with-db @geppetto-db
                                            (select parameters (fields :problem :name))))))
         latest-params (for [[problem name] problem-name-pairs]
                         (parameters-latest problem name))]
@@ -72,12 +72,12 @@
 
 (defn runs-with-parameters
   [paramid]
-  (with-db @granary-db
+  (with-db @geppetto-db
     (select runs (where {:paramid paramid}))))
 
 (defn delete-parameters
   [paramid]
-  (with-db @granary-db
+  (with-db @geppetto-db
     (let [ps (get-params paramid)]
       (when ps
         (delete parameters (where {:problem (:problem ps) :name (:name ps)}))))))

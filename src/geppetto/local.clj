@@ -1,10 +1,10 @@
-(ns granary.local
+(ns geppetto.local
   (:import (java.util Date))
   (:require [clojure.string :as str])
   (:use [clojure.java.io :as io :only [writer file]])
   (:use [clojure-csv.core :only [write-csv]])
-  (:use [granary.misc :only [format-date-ms]])
-  (:use [granary.random]))
+  (:use [geppetto.misc :only [format-date-ms]])
+  (:use [geppetto.random]))
 
 (defn format-time
   [seconds]

@@ -1,14 +1,14 @@
-(ns granary.records
+(ns geppetto.records
   (:import [java.io File])
   (:require [clojure.string :as str])
   (:use [clojure.java.io :only [file]])
   (:use [clojure.java.shell :only [sh]])
   (:use [clojure-csv.core :only [parse-csv]])
-  (:use [granary.local :only [run-partitions]])
-  (:use [granary.misc :only [format-date-ms]])
-  (:use [granary.git :only [git-meta-info]])
-  (:use [granary.runs :only [commit-run]])
-  (:use [granary.parameters :only [explode-params vectorize-params]]))
+  (:use [geppetto.local :only [run-partitions]])
+  (:use [geppetto.misc :only [format-date-ms]])
+  (:use [geppetto.git :only [git-meta-info]])
+  (:use [geppetto.runs :only [commit-run]])
+  (:use [geppetto.parameters :only [explode-params vectorize-params]]))
 
 (defn read-csv
   [lines]

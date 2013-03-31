@@ -1,4 +1,4 @@
-(ns granary.random
+(ns geppetto.random
   (:import (org.apache.commons.math3.distribution NormalDistribution))
   (:import (java.util Random)))
 

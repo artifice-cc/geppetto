@@ -1,6 +1,6 @@
-(defproject cc.artifice/granary "1.0.4"
-  :description "Backend support such as database connectivity for Sisyphus, Retrospect, Chivalry, and other projects that use the same data."
-  :url "http://artifice.cc/granary"
+(defproject cc.artifice/geppetto "2.0.0"
+  :description "Backend support for experimental work."
+  :url "http://artifice.cc/geppetto"
   :license {:name "Eclipse Public License"
             :url "http://www.eclipse.org/legal/epl-v10.html"}
   :dependencies [[org.clojure/clojure "1.4.0"]

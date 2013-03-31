@@ -1,4 +1,4 @@
-(ns granary.models
+(ns geppetto.models
   (:use [korma.core]))
 
 (defentity parameters

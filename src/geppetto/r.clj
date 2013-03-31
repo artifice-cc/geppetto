@@ -1,7 +1,7 @@
-(ns granary.r
+(ns geppetto.r
   (:use [clojure.java.shell :only [sh]])
   (:require [clojure.java.io :as io])
-  (:use [granary.misc]))
+  (:use [geppetto.misc]))
 
 (def results-to-rbin-rcode
   "library(RMySQL)
@@ -58,7 +58,7 @@ save(comparative, file='%s/%d-comparative.rbin', compress=TRUE);
            (map (fn [resultstype] (format "%s/%d-%s.rbin" cachedir runid resultstype))
               ["control" "comparison" "comparative"]))
     (let [rcode (format results-to-rbin-rcode
-                   @granary-dbuser @granary-dbpassword @granary-dbname @granary-dbhost
+                   @geppetto-dbuser @geppetto-dbpassword @geppetto-dbname @geppetto-dbhost
                    runid cachedir runid cachedir runid cachedir runid)
           rscript-fname (format "%s/%d-results-to-rbin.rscript" cachedir runid)]
       (with-open [writer (io/writer rscript-fname)]

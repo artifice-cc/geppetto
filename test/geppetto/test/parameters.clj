@@ -1,6 +1,6 @@
-(ns granary.test.parameters
+(ns geppetto.test.parameters
   (:use clojure.test)
-  (:use granary.parameters))
+  (:use geppetto.parameters))
 
 (deftest test-vectorize-params
   (is (= {:a [1] :b [3]}

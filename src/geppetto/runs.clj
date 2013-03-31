@@ -1,13 +1,13 @@
-(ns granary.runs
+(ns geppetto.runs
   (:use [korma.db :only [transaction]])
   (:use [korma.core])
-  (:use [granary.models])
-  (:use [granary.misc]))
+  (:use [geppetto.models])
+  (:use [geppetto.misc]))
 
 (defn add-simulation
   [runid control-params comparison-params]
   (:generated_key
-   (with-db @granary-db
+   (with-db @geppetto-db
      (insert simulations
              (values [{:runid runid
                        :controlparams control-params
@@ -15,13 +15,13 @@
 
 (defn simulation-count
   [runid]
-  (:count (first (with-db @granary-db
+  (:count (first (with-db @geppetto-db
                    (select simulations (where {:runid runid})
                            (aggregate (count :runid) :count))))))
 
 (defn add-sim-results
   [simid resultstype results]
-  (with-db @granary-db
+  (with-db @geppetto-db
     (let [rs (dissoc results :control-params :comparison-params :params)
           vals (for [[field val] rs]
                  (let [entry {:simid simid :resultstype (name resultstype)
@@ -40,12 +40,12 @@
 (defn add-run
   "Expected keys in run-meta map: ..."
   [run-meta]
-  (:generated_key (with-db @granary-db (insert runs (values [run-meta])))))
+  (:generated_key (with-db @geppetto-db (insert runs (values [run-meta])))))
 
 (defn commit-run
   "Only sends the last results from each simulation."
   [run-meta all-results]
-  (with-db @granary-db
+  (with-db @geppetto-db
     (let [runid (add-run run-meta)]
       (when runid
         (doseq [sim-results all-results]
@@ -62,7 +62,7 @@
 (defn get-run
   [runid]
   (first
-   (with-db @granary-db
+   (with-db @geppetto-db
      (select runs
              (with parameters)
              (where {:runid runid})
@@ -76,12 +76,12 @@
 
 (defn list-runs
   []
-  (with-db @granary-db
+  (with-db @geppetto-db
     (select runs (with parameters))))
 
 (defn delete-run
   [runid]
-  (with-db @granary-db
+  (with-db @geppetto-db
     (let [run (get-run runid)]
       (doseq [simid (map :simid (select simulations (fields :simid) (where {:runid runid})))]
         (delete results-fields (where {:simid simid})))
@@ -90,17 +90,17 @@
 
 (defn list-projects
   []
-  (sort (set (filter identity (map :project (with-db @granary-db
+  (sort (set (filter identity (map :project (with-db @geppetto-db
                                        (select runs (fields :project))))))))
 
 (defn set-project
   [runid project]
-  (with-db @granary-db
+  (with-db @geppetto-db
     (update runs (set-fields {:project project}) (where {:runid runid}))))
 
 (defn gather-results-fields
   [runid resultstype]
-  (with-db @granary-db
+  (with-db @geppetto-db
     (let [simid (:simid (first (select simulations
                                        (fields :simid)
                                        (where {:runid runid})
@@ -112,7 +112,7 @@
 
 (defn get-sim-results
   [simid resultstype selected-fields]
-  (with-db @granary-db
+  (with-db @geppetto-db
     (if (empty? selected-fields) {}
         (apply merge
                (map (fn [{:keys [field valtype strval floatval intval]}]
@@ -129,7 +129,7 @@
 
 (defn get-results
   [runid resultstype selected-fields]
-  (with-db @granary-db
+  (with-db @geppetto-db
     (let [run (get-run runid)
           sims (select simulations (fields :simid :controlparams :comparisonparams)
                        (where {:runid runid}))]
