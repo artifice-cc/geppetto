@@ -1,4 +1,4 @@
-(defproject cc.artifice/geppetto "2.0.0"
+(defproject cc.artifice/geppetto "2.0.1"
   :description "Backend support for experimental work."
   :url "http://artifice.cc/geppetto"
   :license {:name "Eclipse Public License"
@@ -8,4 +8,5 @@
                  [korma "0.3.0-RC2"]
                  [mysql/mysql-connector-java "5.1.6"]
                  [org.apache.commons/commons-math3 "3.0"]
-                 [clojure-csv/clojure-csv "2.0.0-alpha1"]])
+                 [clojure-csv/clojure-csv "2.0.0-alpha1"]
+                 [resque-clojure "0.2.2"]])
