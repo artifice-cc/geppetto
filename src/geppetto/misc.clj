@@ -3,7 +3,8 @@
   (:use [korma.db :only [create-db mysql]])
   (:use [korma.config])
   (:import (java.util Date))
-  (:import (java.text SimpleDateFormat)))
+  (:import (java.text SimpleDateFormat))
+  (:require [geppetto.workers :as workers]))
 
 (def geppetto-db (ref nil))
 (def geppetto-dbhost (ref nil))
@@ -13,6 +14,7 @@
 
 (defn set-geppetto-db
   [dbhost dbname dbuser dbpassword]
+  (workers/load-resque)
   (set-delimiters "`")
   (dosync
    (alter geppetto-db

@@ -1,4 +1,4 @@
-(ns gepetto.workers
+(ns geppetto.workers
   (:require [resque-clojure.core :as resque]))
 
 (defn load-resque

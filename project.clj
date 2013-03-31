@@ -1,4 +1,4 @@
-(defproject cc.artifice/geppetto "2.0.1"
+(defproject cc.artifice/geppetto "2.0.2"
   :description "Backend support for experimental work."
   :url "http://artifice.cc/geppetto"
   :license {:name "Eclipse Public License"
