@@ -27,18 +27,12 @@
                                        (eval (postwalk #(replace-keys results# %) '~v)))}))}))))
 
 (defn evaluate-claim
-  [run-fn choose-problem batch-ref problem-ref claim]
-  (let [[problem-name ps] (read-params (:parameters claim))
-        problem (choose-problem problem-name)
-        options {:recordsdir "records-tmp" :nthreads 1
-                 :datadir "data" :seed 1 :git "/usr/bin/git"
-                 :upload false :save-record true :repetitions 10}]
-    (dosync
-     (alter batch-ref (constantly true))
-     (alter problem-ref (constantly problem)))
-    (run-with-new-record run-fn ps (:datadir options) (:seed options)
-      (:git options) (:recordsdir options) (:nthreads options)
-      (:upload options) (:save-record options) (:repetitions options))
+  [run-fn claim db-params datadir git recordsdir nthreads]
+  (let [seed 1
+        repetitions 10]
+    (run-with-new-record
+      run-fn db-params datadir seed git recordsdir
+      nthreads false true repetitions)
     (let [results (read-archived-results (:recordsdir options))
           verifications (for [to-verify (:verify claim)]
                           {:code (:code to-verify)
