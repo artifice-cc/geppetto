@@ -33,7 +33,7 @@
     (run-with-new-record
       run-fn db-params datadir seed git recordsdir
       nthreads false true repetitions)
-    (let [results (read-archived-results (:recordsdir options))
+    (let [results (read-archived-results recordsdir)
           verifications (for [to-verify (:verify claim)]
                           {:code (:code to-verify)
                            :verification-result ((:result to-verify) results)})]
