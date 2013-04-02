@@ -83,5 +83,4 @@
                              (if comparison-params paired-params control-params)
                              recdir nthreads save-record? repetitions))
       (when (and upload? (not= "" "localhost"))
-        (submit-archived-results recdir))
-      (System/exit 0))))
+        (submit-archived-results recdir)))))
