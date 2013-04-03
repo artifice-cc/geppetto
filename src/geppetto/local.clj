@@ -11,7 +11,7 @@
   (let [hours (int (/ seconds 3600.0))
 	mins (int (/ (rem seconds 3600) 60.0))
 	secs (rem seconds 60)]
-    (format "%dh %dm %ds" hours mins secs)))
+    (format "%02dh %02dm %02ds" hours mins secs)))
 
 (defn print-progress
   [elapsed finished total]
@@ -19,7 +19,7 @@
 	avgtime (/ elapsed finished)
 	expected (* remaining avgtime)
 	wallexpected (.toString (Date. (long (+ expected (.getTime (Date.))))))]
-    (println (format "Done %d/%d;\t Elapsed: %s;\t Remaining: %s;\t Ending %s"
+    (println (format "*** Done %d/%d\t Elapsed: %s\t Remaining: %s\t Ending %s"
                 finished
                 total
                 (format-time (int (/ elapsed 1000.0)))
