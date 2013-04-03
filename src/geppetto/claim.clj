@@ -44,7 +44,6 @@
 
 (defn evaluate-claim
   [run-fn claim datadir git recordsdir nthreads]
-  (println)
   (let [seed 1
         repetitions 30
         results (binding [rgen (new-seed seed)]
@@ -57,7 +56,7 @@
                                  {:code (:code to-verify)
                                   :resultstype resultstype
                                   :verification-result ((:result to-verify) results)})))]
-    (println)
+    (println verifications)
     (doseq [ver verifications]
       (println (format "%s (%s):\t %s" (if (:verification-result ver) "PASS" "FAIL")
                   (name (:resultstype ver)) (:code ver))))

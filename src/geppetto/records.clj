@@ -78,7 +78,7 @@
         (print (format "Making new directory %s..." recdir))
         (.mkdirs (File. recdir))
         (println "done."))
-      (println (format "Running %s (%d parameters, %d repetitions = %d simulations)..."
+      (println (format "Running %s (%d parameters * %d repetitions = %d simulations)..."
                   params-string (count control-params) repetitions
                   (* (count control-params) repetitions)))
       (doall (run-partitions run-fn run-meta (not (nil? comparison-params))
