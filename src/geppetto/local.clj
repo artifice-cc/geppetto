@@ -3,7 +3,7 @@
   (:require [clojure.string :as str])
   (:use [clojure.java.io :as io :only [writer file]])
   (:use [clojure-csv.core :only [write-csv]])
-  (:use [geppetto.misc :only [format-date-ms]])
+  (:use [geppetto.misc])
   (:use [geppetto.random]))
 
 (defn format-time
