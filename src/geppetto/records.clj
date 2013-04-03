@@ -53,7 +53,8 @@
 
 (defn run-with-new-record
   "Create a new folder for storing run data and execute the run."
-  [run-fn db-params datadir seed git recordsdir nthreads upload? save-record? repetitions]
+  [run-fn db-params datadir seed git recordsdir nthreads repetitions
+   upload? save-record? verifying-claim?]
   (try
     (let [t (. System (currentTimeMillis))
           recdir (str recordsdir "/" t)
@@ -82,5 +83,11 @@
       (doall (run-partitions run-fn run-meta (not (nil? comparison-params))
                              (if comparison-params paired-params control-params)
                              recdir nthreads save-record? repetitions))
-      (when (and upload? (not= "" "localhost"))
-        (submit-archived-results recdir)))))
+      (cond verifying-claim?
+            (read-archived-results recdir)
+            (and upload? (not= "" "localhost"))
+            (do
+              (submit-archived-results recdir)
+              (System/exit 0))
+            :else
+            (System/exit 0)))))

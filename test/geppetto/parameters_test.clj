@@ -1,4 +1,4 @@
-(ns geppetto.test.parameters
+(ns geppetto.parameters-test
   (:use clojure.test)
   (:use geppetto.parameters))
 

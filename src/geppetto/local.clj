@@ -19,7 +19,7 @@
 	avgtime (/ elapsed finished)
 	expected (* remaining avgtime)
 	wallexpected (.toString (Date. (long (+ expected (.getTime (Date.))))))]
-    (println (format "\nDone %d/%d;\t Elapsed: %s;\t Remaining: %s;\t Ending %s\n"
+    (println (format "Done %d/%d;\t Elapsed: %s;\t Remaining: %s;\t Ending %s"
                 finished
                 total
                 (format-time (int (/ elapsed 1000.0)))
@@ -75,6 +75,7 @@
 (defn run-partitions
   [run-fn run-meta comparative? params recdir nthreads save-record? repetitions]
   (when save-record? (spit (format "%s/meta.clj" recdir) (pr-str run-meta)))
+  (dosync (alter progress (constantly 0)))
   (let [start-time (.getTime (Date.))
         sim-count (* repetitions (count (set params)))
         seeds (repeatedly repetitions #(my-rand-int 10000000))

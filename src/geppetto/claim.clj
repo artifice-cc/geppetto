@@ -2,11 +2,19 @@
   (:use [clojure.walk])
   (:use [geppetto.parameters :only [read-params]])
   (:use [geppetto.records :only [run-with-new-record read-archived-results]])
-  (:use [geppetto.stats]))
+  (:use [geppetto.stats])
+  (:use [geppetto.random]))
 
 (defn replace-keys
-  [results form]
-  (if (keyword? form) `(map #(get % ~form) ~results) form))
+  [results resultstype form]
+  (if (keyword? form)
+    `(map (fn [r#] (get r# ~form))
+        (map (fn [rs-alltypes#]
+             (last (get rs-alltypes# ~resultstype)))
+           ;; put it in a vec so it is not evaled as ({:control ...})
+           ;; but rather as [{:control ...}]
+           [~@results]))
+    form))
 
 (defmacro make-claim
   [claim-name & opts]
@@ -21,28 +29,37 @@
                    `{:depends ~d})
                  (= 'verify opt)
                  `{:verify
-                   ~(vec (for [v params]
-                           `{:code '~v
-                             :result (fn [results#]
-                                       (eval (postwalk #(replace-keys results# %) '~v)))}))}))))
+                   ~(zipmap
+                     [:control :comparison :comparative]
+                     (for [resultstype [:control :comparison :comparative]]
+                       (vec (for [v (get (first params) resultstype)]
+                              `{:code '~v
+                                :result (fn [results#]
+                                          (eval (postwalk
+                                                 (fn [term#]
+                                                   (replace-keys results# ~resultstype term#))
+                                                 '~v)))}))))}))))
 
 (defn evaluate-claim
   [run-fn claim db-params datadir git recordsdir nthreads]
   (let [seed 1
-        repetitions 10]
-    (run-with-new-record
-      run-fn db-params datadir seed git recordsdir
-      nthreads false true repetitions)
-    (let [results (read-archived-results recordsdir)
-          verifications (for [to-verify (:verify claim)]
-                          {:code (:code to-verify)
-                           :verification-result ((:result to-verify) results)})]
-      (if (every? :verification-result verifications)
-        (do
-          (println (format "Claim \"%s\" verified." (:name claim)))
-          true)
-        (do
-          (println (format "Claim \"%s\" not verified.\nThese failed:" (:name claim)))
-          (doseq [failed (map :code (filter #(not (:verification-result %)) verifications))]
-            (println (format "\t%s" failed)))
-          false)))))
+        repetitions 2
+        results (binding [rgen (new-seed seed)]
+                  (run-with-new-record
+                    run-fn db-params datadir seed git recordsdir
+                    nthreads repetitions false true true))
+        verifications (apply concat
+                             (for [resultstype [:control :comparison :comparative]]
+                               (for [to-verify (get (:verify claim) resultstype)]
+                                 {:code (:code to-verify)
+                                  :resultstype resultstype
+                                  :verification-result ((:result to-verify) results)})))]
+    (if (every? :verification-result verifications)
+      (do
+        (println (format "Claim \"%s\" verified." (:name claim)))
+        true)
+      (do
+        (println (format "Claim \"%s\" not verified.\nThese failed:" (:name claim)))
+        (doseq [failed (filter #(not (:verification-result %)) verifications)]
+          (println (format "\t%s: %s" (name (:resultstype failed)) (:code failed))))
+        false))))
