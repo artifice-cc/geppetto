@@ -43,13 +43,13 @@
                                                  '~v)))}))))}))))
 
 (defn evaluate-claim
-  [run-fn claim db-params datadir git recordsdir nthreads]
+  [run-fn claim datadir git recordsdir nthreads]
   (println)
   (let [seed 1
         repetitions 30
         results (binding [rgen (new-seed seed)]
                   (run-with-new-record
-                    run-fn db-params datadir seed git recordsdir
+                    run-fn (:parameters claim) datadir seed git recordsdir
                     nthreads repetitions false true true))
         verifications (apply concat
                              (for [resultstype [:control :comparison :comparative]]

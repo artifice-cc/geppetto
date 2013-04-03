@@ -8,7 +8,7 @@
   (:use [geppetto.misc :only [format-date-ms]])
   (:use [geppetto.git :only [git-meta-info]])
   (:use [geppetto.runs :only [commit-run]])
-  (:use [geppetto.parameters :only [explode-params vectorize-params]]))
+  (:use [geppetto.parameters :only [read-params explode-params vectorize-params]]))
 
 (defn read-csv
   [lines]
@@ -53,18 +53,19 @@
 
 (defn run-with-new-record
   "Create a new folder for storing run data and execute the run."
-  [run-fn db-params datadir seed git recordsdir nthreads repetitions
+  [run-fn params-string datadir seed git recordsdir nthreads repetitions
    upload? save-record? verifying-claim?]
   (try
     (let [t (. System (currentTimeMillis))
           recdir (str recordsdir "/" t)
-          control-params (explode-params (vectorize-params (:control db-params)))
-          comparison-params (when (:comparison db-params)
-                              (explode-params (vectorize-params (:comparison db-params))))
+          params (read-params params-string)
+          control-params (explode-params (vectorize-params (:control params)))
+          comparison-params (when (:comparison params)
+                              (explode-params (vectorize-params (:comparison params))))
           paired-params (when comparison-params
                           (partition 2 (interleave control-params comparison-params)))
           run-meta (merge {:starttime (format-date-ms t)
-                           :paramid (:paramid db-params)
+                           :paramid (:paramid params)
                            :datadir datadir :recorddir recdir :nthreads nthreads
                            :pwd (:out (sh "pwd")) :repetitions repetitions :seed seed
                            :hostname (.getHostName (java.net.InetAddress/getLocalHost))
@@ -77,8 +78,8 @@
         (print (format "Making new directory %s..." recdir))
         (.mkdirs (File. recdir))
         (println "done."))
-      (println (format "Running %d parameters, %d repetitions = %d simulations..."
-                  (count control-params) repetitions
+      (println (format "Running %s (%d parameters, %d repetitions = %d simulations)..."
+                  params-string (count control-params) repetitions
                   (* (count control-params) repetitions)))
       (doall (run-partitions run-fn run-meta (not (nil? comparison-params))
                              (if comparison-params paired-params control-params)

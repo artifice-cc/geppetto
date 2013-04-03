@@ -82,16 +82,20 @@
       (when ps
         (delete parameters (where {:problem (:problem ps) :name (:name ps)}))))))
 
+(defn extract-problem
+  [params-string]
+  (first (str/split params-string #"/")))
+
 (defn read-params
   [params-string]
   (let [[problem name] (str/split params-string #"/")
         params (get-params problem name)]
     (when params
-      [problem (if (:comparison params)
-                 (-> params
-                    (update-in [:control] read-string)
-                    (update-in [:comparison] read-string))
-                 (update-in params [:control] read-string))])))
+      (if (:comparison params)
+        (-> params
+           (update-in [:control] read-string)
+           (update-in [:comparison] read-string))
+        (update-in params [:control] read-string)))))
 
 (defn vectorize-params
   [params]

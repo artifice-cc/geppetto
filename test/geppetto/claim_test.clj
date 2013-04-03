@@ -34,6 +34,5 @@
                                       (and (geppetto.test-utils/nearly= (first (:coefs lm)) 10.0 1.0)
                                            (> (:r-square lm) 0.8))))}))
         run-fn (fn [comparative? params] (let [a (rand) b (* (+ 10 (rand)) a)] [{:a a :b b}]))
-        [problem-name ps] (read-params "Testing/test-1")
-        eval-result (evaluate-claim run-fn claim ps "" "/usr/bin/git" "/tmp" 1)]
+        eval-result (evaluate-claim run-fn claim "" "/usr/bin/git" "/tmp" 1)]
     (is (= true eval-result))))
