@@ -15,16 +15,17 @@
 
 (defn print-progress
   [elapsed finished total]
-  (let [remaining (- total finished)
-	avgtime (/ elapsed finished)
-	expected (* remaining avgtime)
-	wallexpected (.toString (Date. (long (+ expected (.getTime (Date.))))))]
-    (println (format "*** Done %d/%d\t Elapsed: %s\t Remaining: %s\t Ending %s"
-                finished
-                total
-                (format-time (int (/ elapsed 1000.0)))
-                (format-time (int (/ expected 1000.0)))
-                wallexpected))))
+  (when (not @quiet-mode)
+    (let [remaining (- total finished)
+          avgtime (/ elapsed finished)
+          expected (* remaining avgtime)
+          wallexpected (.toString (Date. (long (+ expected (.getTime (Date.))))))]
+      (println (format "*** Done %d/%d\t Elapsed: %s\t Remaining: %s\t Ending %s"
+                  finished
+                  total
+                  (format-time (int (/ elapsed 1000.0)))
+                  (format-time (int (/ expected 1000.0)))
+                  wallexpected)))))
 
 ;; keep track of progress
 (def progress (ref 0))

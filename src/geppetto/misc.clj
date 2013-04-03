@@ -11,9 +11,10 @@
 (def geppetto-dbname (ref nil))
 (def geppetto-dbuser (ref nil))
 (def geppetto-dbpassword (ref nil))
+(def quiet-mode (ref nil))
 
-(defn set-geppetto-db
-  [dbhost dbname dbuser dbpassword]
+(defn setup-geppetto
+  [dbhost dbname dbuser dbpassword quiet?]
   (workers/load-resque)
   (set-delimiters "`")
   (dosync
@@ -24,7 +25,8 @@
    (alter geppetto-dbhost (constantly dbhost))
    (alter geppetto-dbname (constantly dbname))
    (alter geppetto-dbuser (constantly dbuser))
-   (alter geppetto-dbpassword (constantly dbpassword))))
+   (alter geppetto-dbpassword (constantly dbpassword))
+   (alter quiet-mode (constantly quiet?))))
 
 (defmacro with-db  
   "Execute all queries within the body using the given db spec"
