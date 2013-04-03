@@ -1,4 +1,5 @@
 (ns geppetto.claim
+  (:require [clojure.string :as str])
   (:use [clojure.walk])
   (:use [geppetto.parameters :only [read-params]])
   (:use [geppetto.records :only [run-with-new-record read-archived-results]])
@@ -7,13 +8,14 @@
 
 (defn replace-keys
   [results resultstype form]
-  (if (keyword? form)
-    `(map (fn [r#] (get r# ~form))
-        (map (fn [rs-alltypes#]
-             (last (get rs-alltypes# ~resultstype)))
-           ;; put it in a vec so it is not evaled as ({:control ...})
-           ;; but rather as [{:control ...}]
-           [~@results]))
+  (if (and (keyword? form) (re-matches #"^_.*" (name form)))
+    (let [k (keyword (str/replace (name form) #"^_" ""))]
+      `(map (fn [r#] (get r# ~k))
+          (map (fn [rs-alltypes#]
+               (last (get rs-alltypes# ~resultstype)))
+             ;; put it in a vec so it is not evaled as ({:control ...})
+             ;; but rather as [{:control ...}]
+             [~@results])))
     form))
 
 (defmacro make-claim
@@ -44,7 +46,7 @@
   [run-fn claim db-params datadir git recordsdir nthreads]
   (println)
   (let [seed 1
-        repetitions 2
+        repetitions 30
         results (binding [rgen (new-seed seed)]
                   (run-with-new-record
                     run-fn db-params datadir seed git recordsdir
@@ -64,5 +66,5 @@
         (println (format "Claim \"%s\" verified." (:name claim)))
         true)
       (do
-        (println (format "Claim \"%s\" not verified."))
+        (println (format "Claim \"%s\" not verified." (:name claim)))
         false))))

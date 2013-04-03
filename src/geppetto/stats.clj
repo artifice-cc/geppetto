@@ -7,7 +7,8 @@
       (double (/ (reduce + vals) (count vals)))))
 
 (defn linear-reg
-  [_ _ _ _])
+  [xs ys]
+  (is/linear-model (vec ys) (vec xs) :intercept false))
 
 (defn paired-t-test
   [_ _ _])
