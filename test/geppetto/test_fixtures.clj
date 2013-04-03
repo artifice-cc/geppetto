@@ -21,7 +21,7 @@
    (alter geppetto-db
           (constantly {:classname "org.h2.Driver"
                        :subprotocol "h2"
-                       :subname "mem:test"})))
+                       :subname "mem:test;DB_CLOSE_DELAY=-1"})))
   (with-db @geppetto-db
     (exec-raw (slurp "testdb.sql")))
   (set-delimiters "")
