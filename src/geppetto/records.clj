@@ -81,9 +81,10 @@
       (println (format "Running %s (%d parameters * %d repetitions = %d simulations)..."
                   params-string (count control-params) repetitions
                   (* (count control-params) repetitions)))
-      (doall (run-partitions run-fn run-meta (not (nil? comparison-params))
-                             (if comparison-params paired-params control-params)
-                             recdir nthreads save-record? repetitions))
+      (binding [*out* (if verifying-claim? (java.io.StringWriter.) *out*)]
+        (doall (run-partitions run-fn run-meta (not (nil? comparison-params))
+                               (if comparison-params paired-params control-params)
+                               recdir nthreads save-record? repetitions)))
       (cond verifying-claim?
             (read-archived-results recdir)
             (and upload? (not= "" "localhost"))
