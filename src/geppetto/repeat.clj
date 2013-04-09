@@ -23,11 +23,10 @@
 
 (defn extract-single
   [rs resultstype only-ignore]
-  (let [{:keys [only ignore]} (get only-ignore resultstype)
-        rs-no-params (dissoc rs :params)]
-    (cond only (select-keys rs-no-params only)
-          ignore (apply dissoc rs-no-params ignore)
-          :else rs-no-params)))
+  (let [{:keys [only ignore]} (get only-ignore resultstype)]
+    (cond only (select-keys rs only)
+          ignore (apply dissoc rs ignore)
+          :else rs)))
 
 (defn extract-relevant-results
   [results only-ignore]
@@ -47,7 +46,7 @@
   [old-sim new-sim]
   (into {} (for [resultstype [:control :comparison :comparative]]
              (let [old-rs (get old-sim resultstype)
-                   new-rs (get new-sim resultstype)
+                   new-rs (dissoc (get new-sim resultstype) :params)
                    key-val-pairs (map (fn [k] [k (get old-rs k) (get new-rs k)])
                                     (sort (set (concat (keys old-rs) (keys new-rs)))))
                    diffs (for [[k old-val new-val] key-val-pairs
@@ -65,6 +64,8 @@
                       (sort-by (comp :simulation :control)
                                (get-raw-results runid))
                       only-ignore))
+        ;; note, new-results will have a :params field (old-results does not),
+        ;; and this will be exploited below
         new-results (doall
                      (extract-relevant-results
                       (sort-by (comp :simulation :control)
@@ -73,4 +74,6 @@
     (filter (fn [{{:keys [control comparison comparative]} :diffs}]
          (or (not-empty control) (not-empty comparison) (not-empty comparative)))
        (for [[old-sim new-sim] (partition 2 (interleave old-results new-results))]
-         {:old old-sim :new new-sim :diffs (results-diff old-sim new-sim)}))))
+         {:params {:control (:params (:control new-sim))
+                   :comparison (:params (:comparison new-sim))}
+          :diffs (results-diff old-sim new-sim)}))))
