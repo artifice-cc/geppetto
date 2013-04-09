@@ -70,6 +70,7 @@
                       (sort-by (comp :simulation :control)
                                (repeat-run runid run-fn datadir git "/tmp" nthreads))
                       only-ignore))]
-    (filter :diffs
+    (filter (fn [{{:keys [control comparison comparative]} :diffs}]
+         (or (not-empty control) (not-empty comparison) (not-empty comparative)))
        (for [[old-sim new-sim] (partition 2 (interleave old-results new-results))]
          {:old old-sim :new new-sim :diffs (results-diff old-sim new-sim)}))))
