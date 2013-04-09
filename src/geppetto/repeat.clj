@@ -23,10 +23,11 @@
 
 (defn extract-single
   [rs resultstype only-ignore]
-  (let [{:keys [only ignore]} (get only-ignore resultstype)]
-    (cond only (select-keys rs only)
-          ignore (apply dissoc rs ignore)
-          :else rs)))
+  (let [{:keys [only ignore]} (get only-ignore resultstype)
+        rs-no-params (dissoc rs :params)]
+    (cond only (select-keys rs-no-params only)
+          ignore (apply dissoc rs-no-params ignore)
+          :else rs-no-params)))
 
 (defn extract-relevant-results
   [results only-ignore]
@@ -57,7 +58,7 @@
 (defn verify-identical-repeat-run
   "only-ignore parameter takes the format:
    {:control {:only [:key1 :key2]} :comparison {:ignore [:key1 :key2]}} etc.
-   Only takes priority over ignore."
+   Only takes priority over ignore. The :params field is always ignored."
   [runid only-ignore run-fn datadir git nthreads]
   (let [old-results (doall
                      (extract-relevant-results
