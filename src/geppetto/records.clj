@@ -37,11 +37,11 @@
              (format "%s/comparison-results-%d.csv" recdir sim)
              comparative-file
              (format "%s/comparative-results-%d.csv" recdir sim)]
-         {:control [(last (read-csv (str/split (slurp control-file) #"\n")))]
+         {:control (last (read-csv (str/split (slurp control-file) #"\n")))
           :comparison (when (. (file comparison-file) exists)
-                        [(last (read-csv (str/split (slurp comparison-file) #"\n")))])
+                        (last (read-csv (str/split (slurp comparison-file) #"\n"))))
           :comparative (when (. (file comparative-file) exists)
-                         [(last (read-csv (str/split (slurp comparative-file) #"\n")))])})))))
+                         (last (read-csv (str/split (slurp comparative-file) #"\n"))))})))))
 
 (defn submit-archived-results
   [recdir]
@@ -75,11 +75,10 @@
         (println "Control/comparison param counts are not equal.")
         (System/exit -1))
       (when save-record?
-        (print (format "Making new directory %s..." recdir))
-        (.mkdirs (File. recdir))
-        (println "done."))
-      (println (format "Running %s (%d parameters * %d repetitions = %d simulations)..."
-                  params-string (count control-params) repetitions
+        (print (format "Making new directory %s ..." recdir))
+        (.mkdirs (File. recdir)))
+      (println (format "Running %d parameters * %d repetitions = %d simulations..."
+                  (count control-params) repetitions
                   (* (count control-params) repetitions)))
       (binding [*out* (if verifying-claim? (java.io.StringWriter.) *out*)]
         (doall (run-partitions run-fn run-meta (not (nil? comparison-params))

@@ -28,10 +28,14 @@
                               :field (name field)}]
                    (cond (= Double (type val))
                          (assoc entry :valtype "floatval" :floatval val
-                                :strval nil :intval nil)
+                                :strval nil :intval nil :boolval nil)
                          (= Integer (type val))
                          (assoc entry :valtype "intval" :intval val
-                                :strval nil :floatval nil)
+                                :strval nil :floatval nil :boolval nil)
+                         (= Boolean (type val))
+                         (assoc entry :valtype "boolval" :intval nil
+                                :strval nil :floatval nil
+                                :boolval (if (.booleanValue val) 1 0))
                          :else
                          (assoc entry :valtype "strval" :strval val
                                 :intval nil :floatval nil))))]
@@ -50,14 +54,14 @@
       (when runid
         (doseq [sim-results all-results]
           (let [control-params (or (:control-params
-                                    (last (:control sim-results)))
-                                   (:params (last (:control sim-results))))
+                                    (:control sim-results))
+                                   (:params (:control sim-results)))
                 comparison-params (:comparison-params
-                                   (last (:comparison sim-results)))
+                                   (:comparison sim-results))
                 simid (add-simulation runid control-params comparison-params)]
             (doseq [resultstype [:control :comparison :comparative]]
-              (when (resultstype sim-results)
-                (add-sim-results simid resultstype (last (resultstype sim-results)))))))))))
+              (when-let [results (get sim-results resultstype)]
+                (add-sim-results simid resultstype results)))))))))
 
 (defn get-run
   [runid]
@@ -115,13 +119,14 @@
   (with-db @geppetto-db
     (if (empty? selected-fields) {}
         (apply merge
-               (map (fn [{:keys [field valtype strval floatval intval]}]
+               (map (fn [{:keys [field valtype strval floatval intval boolval]}]
                     {(keyword field)
                      (cond (= "strval" valtype) strval
                            (= "floatval" valtype) floatval
-                           (= "intval" valtype) intval)})
+                           (= "intval" valtype) intval
+                           (= "boolval" valtype) (Boolean. boolval))})
                   (select results-fields
-                          (fields :field :valtype :strval :floatval :intval)
+                          (fields :field :valtype :strval :floatval :intval :boolval)
                           (where (and (= :simid simid)
                                       (= :resultstype (name resultstype))
                                       (apply or (map (fn [f] (= :field f))
@@ -137,3 +142,16 @@
         (assoc (get-sim-results (:simid sim) resultstype selected-fields)
           :control-params (:controlparams sim)
           :comparison-params (:comparisonparams sim))))))
+
+(defn get-raw-results
+  "Get results without associating in simid and control-params/comparison-params."
+  [runid]
+  (with-db @geppetto-db
+    (let [run (get-run runid)
+          sims (select simulations (fields :simid) (where {:runid runid}))
+          fields (into {} (for [resultstype [:control :comparison :comparative]]
+                            [resultstype (gather-results-fields runid resultstype)]))]
+      (for [sim sims]
+        (into {} (for [resultstype [:control :comparison :comparative]]
+                   [resultstype (get-sim-results (:simid sim) resultstype
+                                                 (get fields resultstype))]))))))

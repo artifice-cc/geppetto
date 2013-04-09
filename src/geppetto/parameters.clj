@@ -89,7 +89,11 @@
 (defn read-params
   [params-string]
   (let [[problem name] (str/split params-string #"/")
-        params (get-params problem name)]
+        ;; params-string may be a clojure structure (as a string),
+        ;; so if fetching the Problem/Params format did not work,
+        ;; try to read it as clojure code
+        params (if name (get-params problem name)
+                   (read-string params-string))]
     (when params
       (if (:comparison params)
         (-> params
