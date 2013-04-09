@@ -24,10 +24,9 @@
 (defn extract-single
   [rs resultstype only-ignore]
   (let [{:keys [only ignore]} (get only-ignore resultstype)]
-    (map (fn [r] (cond only (select-keys r only)
-                    ignore (apply dissoc r ignore)
-                    :else r))
-       rs)))
+    (cond only (select-keys rs only)
+          ignore (apply dissoc rs ignore)
+          :else rs)))
 
 (defn extract-relevant-results
   [results only-ignore]

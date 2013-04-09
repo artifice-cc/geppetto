@@ -38,7 +38,7 @@
                                 :boolval (if (.booleanValue val) 1 0))
                          :else
                          (assoc entry :valtype "strval" :strval val
-                                :intval nil :floatval nil))))]
+                                :intval nil :floatval nil :boolval nil))))]
       (insert results-fields (values (vec vals))))))
 
 (defn add-run
