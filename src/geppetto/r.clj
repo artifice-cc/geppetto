@@ -30,6 +30,13 @@ for(resultstype in c('control', 'comparison', 'comparative')) {
       } else {
         d <- data.frame(f = tmp$intval);
       }
+    } else if(tmp[1,'valtype'] == 'boolval') {
+      tmp$boolval <- (tmp$boolval == 1)
+      if(nrow(d) > 0) {
+        d <- data.frame(d, f = tmp$boolval);
+      } else {
+        d <- data.frame(f = tmp$boolval);
+      }
     } else {
       if(nrow(d) > 0) {
         d <- data.frame(d, f = tmp$floatval);
