@@ -51,9 +51,12 @@
 (defn gather-results-fields
   [runid resultstype]
   (let [recorddir (:recorddir (get-run runid))
-        csv-file (format "%s/%s-results-0.csv" recorddir resultstype)
-        first-line (first (with-open [rdr (reader csv-file)] (line-seq rdr)))]
-    (map keyword (sort (str/split first-line #",")))))
+        csv-file (format "%s/%s-results-0.csv" recorddir (name resultstype))
+        first-line (try (first (with-open [rdr (reader csv-file)] (line-seq rdr)))
+                        (catch Exception e))]
+    (if first-line
+      (map keyword (sort (str/split first-line #",")))
+      [])))
 
 (defn read-csv
   [lines]
