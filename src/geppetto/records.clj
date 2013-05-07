@@ -25,7 +25,7 @@
    upload? save-record? verifying-claim?]
   (try
     (let [t (. System (currentTimeMillis))
-          recdir (.getAbsolutePath (file (str recordsdir "/" t)))
+          recdir (.getAbsolutePath (File. (str recordsdir "/" t)))
           params (read-params params-string)
           control-params (explode-params (vectorize-params (:control params)))
           comparison-params (when (:comparison params)
@@ -45,7 +45,7 @@
         (println "Control/comparison param counts are not equal.")
         (System/exit -1))
       (when save-record?
-        (print (format "Making new directory %s ..." recdir))
+        (println (format "Making new directory %s ..." recdir))
         (.mkdirs (File. recdir)))
       (println (format "Running %d parameters * %d repetitions = %d simulations..."
                   (count control-params) repetitions simcount))
