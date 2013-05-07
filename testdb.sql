@@ -1,22 +1,3 @@
-CREATE DOMAIN IF NOT EXISTS resultstype AS VARCHAR DEFAULT 'control'
-       CHECK VALUE IN('control', 'comparison', 'comparative');
-
-CREATE DOMAIN IF NOT EXISTS valtype AS VARCHAR DEFAULT 'strval'
-       CHECK VALUE IN('strval', 'floatval', 'intval');
-
-DROP TABLE IF EXISTS `results_fields`;
-CREATE TABLE `results_fields` (
-  `rfid` int(11) NOT NULL,
-  `simid` int(11) NOT NULL,
-  `resultstype` resultstype NOT NULL,
-  `field` varchar(255) NOT NULL,
-  `valtype` valtype NOT NULL,
-  `strval` varchar(255) DEFAULT NULL,
-  `floatval` float DEFAULT NULL,
-  `intval` int(11) DEFAULT NULL,
-  PRIMARY KEY (`rfid`),
-);
-
 DROP TABLE IF EXISTS `runs`;
 CREATE TABLE `runs` (
   `runid` int(11) AUTO_INCREMENT,
@@ -36,6 +17,7 @@ CREATE TABLE `runs` (
   `seed` int(11) NOT NULL,
   `username` varchar(255) NOT NULL,
   `project` varchar(255) DEFAULT NULL,
+  `simcount` int(11) NOT NULL DEFAULT 0,
   PRIMARY KEY (`runid`),
 );
 
@@ -49,14 +31,5 @@ CREATE TABLE `parameters` (
   `control` varchar(2000),
   `description` varchar(2000),
   PRIMARY KEY (`paramid`),
-);
-
-DROP TABLE IF EXISTS `simulations`;
-CREATE TABLE `simulations` (
-  `simid` int(11) AUTO_INCREMENT,
-  `runid` int(11) NOT NULL,
-  `controlparams` varchar(2000) NOT NULL,
-  `comparisonparams` varchar(2000),
-  PRIMARY KEY (`simid`)
 );
 

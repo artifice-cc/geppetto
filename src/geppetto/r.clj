@@ -1,73 +1,24 @@
 (ns geppetto.r
+  (:require [clojure.string :as str])
   (:use [clojure.java.shell :only [sh]])
-  (:require [clojure.java.io :as io])
-  (:use [geppetto.misc]))
+  (:require [clojure.java.io :as io]))
 
-(def results-to-rbin-rcode
-  "library(RMySQL)
-con <- dbConnect(MySQL(), user='%s', password='%s', dbname='%s', host='%s')
-
-results <- dbGetQuery(con, 'select * from results_fields where simid in (select simid from simulations where runid = %d) order by simid')
-
-control <- data.frame()
-comparison <- data.frame()
-comparative <- data.frame()
-
-for(resultstype in c('control', 'comparison', 'comparative')) {
-  d <- data.frame()
-  r <- results[results$resultstype == resultstype,]
-  for(field in unique(r$field)) {
-    tmp <- r[r$field == field,]
-    if(tmp[1,'valtype'] == 'strval') {
-      if(nrow(d) > 0) {
-        d <- data.frame(d, f = tmp$strval);
-      } else {
-        d <- data.frame(f = tmp$strval);
-      }
-    } else if(tmp[1,'valtype'] == 'intval') {
-      if(nrow(d) > 0) {
-        d <- data.frame(d, f = tmp$intval);
-      } else {
-        d <- data.frame(f = tmp$intval);
-      }
-    } else if(tmp[1,'valtype'] == 'boolval') {
-      tmp$boolval <- (tmp$boolval == 1)
-      if(nrow(d) > 0) {
-        d <- data.frame(d, f = tmp$boolval);
-      } else {
-        d <- data.frame(f = tmp$boolval);
-      }
-    } else {
-      if(nrow(d) > 0) {
-        d <- data.frame(d, f = tmp$floatval);
-      } else {
-        d <- data.frame(f = tmp$floatval);
-      }
-    }
-    colnames(d)[ncol(d)] <- field
-  }
-  if(resultstype == 'control') {
-    control <- d;
-  } else if(resultstype == 'comparison') {
-    comparison <- d;
-  } else {
-    comparative <- d;
-  }
-}
-save(control, file='%s/%d-control.rbin', compress=TRUE);
-save(comparison, file='%s/%d-comparison.rbin', compress=TRUE);
-save(comparative, file='%s/%d-comparative.rbin', compress=TRUE);
-")
+(defn results-to-rbin-rcode
+  [recdir]
+  (str/join "\n\n"
+            (for [resultstype ["control" "comparison" "comparative"]]
+              (format "%s <- data.frame()
+                  files <- list.files(\"%s\", pattern=\"%s-results-\\\\d+\\\\.csv$\")
+                  for(file in files) {
+                    %s <- rbind(%s, read.csv(file))
+                  }
+                  save(%s, file=\"%s/%s.rbin\", compress=TRUE)"
+                 resultstype recdir resultstype resultstype resultstype resultstype recdir resultstype))))
 
 (defn results-to-rbin
-  [runid cachedir]
-  (when (some #(not (. (io/file %) exists))
-           (map (fn [resultstype] (format "%s/%d-%s.rbin" cachedir runid resultstype))
-              ["control" "comparison" "comparative"]))
-    (let [rcode (format results-to-rbin-rcode
-                   @geppetto-dbuser @geppetto-dbpassword @geppetto-dbname @geppetto-dbhost
-                   runid cachedir runid cachedir runid cachedir runid)
-          rscript-fname (format "%s/%d-results-to-rbin.rscript" cachedir runid)]
-      (with-open [writer (io/writer rscript-fname)]
-        (.write writer rcode))
-      (sh "/usr/bin/Rscript" rscript-fname))))
+  [recdir]
+  (let [rcode (results-to-rbin-rcode recdir)
+        rscript-fname (format "%s/results-to-rbin.rscript" recdir)]
+    (with-open [writer (io/writer rscript-fname)]
+      (.write writer rcode))
+    (sh "/usr/bin/Rscript" rscript-fname)))

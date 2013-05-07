@@ -3,7 +3,7 @@
   (:use [clojure.pprint :only [pprint]])
   (:use [clojure.walk])
   (:use [geppetto.parameters :only [read-params]])
-  (:use [geppetto.records :only [run-with-new-record read-archived-results]])
+  (:use [geppetto.records :only [run-with-new-record]])
   (:use [geppetto.stats])
   (:use [geppetto.random]))
 
@@ -15,7 +15,7 @@
     (let [k (keyword (str/replace (name form) #"^_" ""))]
       `(map (fn [r#] (get r# ~k))
           (map (fn [rs-alltypes#]
-               (last (get rs-alltypes# ~resultstype)))
+               (get rs-alltypes# ~resultstype))
              @results)))
     form))
 

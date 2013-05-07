@@ -12,7 +12,3 @@
   (pk :simid)
   (belongs-to runs {:fk :runid}))
 
-(defentity results-fields
-  (table :results_fields)
-  (pk :rfid)
-  (belongs-to simulations {:fk :simid}))

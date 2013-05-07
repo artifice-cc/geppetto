@@ -21,12 +21,12 @@
     (is (= '(> (geppetto.stats/mean :_AvgCoverage) 0.75)
            (:code (second (:control (:verify claim))))))
     (is (= false (do (dosync (alter results
-                                    (constantly [{:control [{:AvgPrec 1.0}]}
-                                                 {:control [{:AvgPrec 0.0}]}])))
+                                    (constantly [{:control {:AvgPrec 1.0}}
+                                                 {:control {:AvgPrec 0.0}}])))
                      ((:result (first (:control (:verify claim))))))))
     (is (= true (do (dosync (alter results
-                                   (constantly [{:control [{:AvgPrec 1.0}]}
-                                                {:control [{:AvgPrec 2.0}]}])))
+                                   (constantly [{:control {:AvgPrec 1.0}}
+                                                {:control {:AvgPrec 2.0}}])))
                     ((:result (first (:control (:verify claim))))))))))
 
 (deftest test-evaluate-claim

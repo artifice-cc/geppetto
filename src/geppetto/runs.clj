@@ -1,67 +1,17 @@
 (ns geppetto.runs
+  (:require [clojure.string :as str])
+  (:require [clojure.set :as set])
   (:use [korma.db :only [transaction]])
   (:use [korma.core])
+  (:use [clojure-csv.core :only [parse-csv]])
+  (:use [clojure.java.io :only [reader]])
   (:use [geppetto.models])
   (:use [geppetto.misc]))
 
-(defn add-simulation
-  [runid control-params comparison-params]
-  (:generated_key
-   (with-db @geppetto-db
-     (insert simulations
-             (values [{:runid runid
-                       :controlparams control-params
-                       :comparisonparams comparison-params}])))))
-
-(defn simulation-count
-  [runid]
-  (:count (first (with-db @geppetto-db
-                   (select simulations (where {:runid runid})
-                           (aggregate (count :runid) :count))))))
-
-(defn add-sim-results
-  [simid resultstype results]
-  (with-db @geppetto-db
-    (let [rs (dissoc results :control-params :comparison-params :params)
-          vals (for [[field val] rs]
-                 (let [entry {:simid simid :resultstype (name resultstype)
-                              :field (name field)}]
-                   (cond (= Double (type val))
-                         (assoc entry :valtype "floatval" :floatval val
-                                :strval nil :intval nil :boolval nil)
-                         (= Integer (type val))
-                         (assoc entry :valtype "intval" :intval val
-                                :strval nil :floatval nil :boolval nil)
-                         (= Boolean (type val))
-                         (assoc entry :valtype "boolval" :intval nil
-                                :strval nil :floatval nil
-                                :boolval (if (.booleanValue val) 1 0))
-                         :else
-                         (assoc entry :valtype "strval" :strval val
-                                :intval nil :floatval nil :boolval nil))))]
-      (insert results-fields (values (vec vals))))))
-
-(defn add-run
-  "Expected keys in run-meta map: ..."
-  [run-meta]
-  (:generated_key (with-db @geppetto-db (insert runs (values [run-meta])))))
-
 (defn commit-run
-  "Only sends the last results from each simulation."
-  [run-meta all-results]
+  [run-meta]
   (with-db @geppetto-db
-    (let [runid (add-run run-meta)]
-      (when runid
-        (doseq [sim-results all-results]
-          (let [control-params (or (:control-params
-                                    (:control sim-results))
-                                   (:params (:control sim-results)))
-                comparison-params (:comparison-params
-                                   (:comparison sim-results))
-                simid (add-simulation runid control-params comparison-params)]
-            (doseq [resultstype [:control :comparison :comparative]]
-              (when-let [results (get sim-results resultstype)]
-                (add-sim-results simid resultstype results)))))))))
+    (:generated_key (with-db @geppetto-db (insert runs (values [run-meta]))))))
 
 (defn get-run
   [runid]
@@ -71,7 +21,7 @@
              (with parameters)
              (where {:runid runid})
              (fields :runid :starttime :endtime :username
-                     :seed :nthreads :repetitions
+                     :seed :nthreads :repetitions :simcount
                      :pwd :hostname :recorddir :datadir :project
                      :commit :commitdate :commitmsg :branch
                      :runs.paramid :parameters.name
@@ -86,11 +36,7 @@
 (defn delete-run
   [runid]
   (with-db @geppetto-db
-    (let [run (get-run runid)]
-      (doseq [simid (map :simid (select simulations (fields :simid) (where {:runid runid})))]
-        (delete results-fields (where {:simid simid})))
-      (delete simulations (where {:runid runid}))
-      (delete runs (where {:runid runid})))))
+    (delete runs (where {:runid runid}))))
 
 (defn list-projects
   []
@@ -104,54 +50,47 @@
 
 (defn gather-results-fields
   [runid resultstype]
-  (with-db @geppetto-db
-    (let [simid (:simid (first (select simulations
-                                       (fields :simid)
-                                       (where {:runid runid})
-                                       (limit 1))))]
-      (sort (set (map (comp keyword :field)
-                    (select results-fields
-                            (fields :field)
-                            (where {:simid simid :resultstype (name resultstype)}))))))))
+  (let [recorddir (:recorddir (get-run runid))
+        csv-file (format "%s/%s-results-0.csv" recorddir resultstype)
+        first-line (first (with-open [rdr (reader csv-file)] (line-seq rdr)))]
+    (map keyword (sort (str/split first-line #",")))))
+
+(defn read-csv
+  [lines]
+  (let [headers (map keyword (str/split (first lines) #","))]
+    (doall
+     (for [line (parse-csv (str/join "\n" (rest lines)))]
+       (let [data (map #(cond (re-matches #"^(true|false)$" %) (Boolean/parseBoolean %)
+                            (re-matches #"^-?\d+\.\d+E?-?\d*$" %) (Double/parseDouble %)
+                            (re-matches #"^\d+$" %) (Integer/parseInt %)
+                            :else %)
+                     line)]
+         (apply hash-map (interleave headers data)))))))
 
 (defn get-sim-results
-  [simid resultstype selected-fields]
-  (with-db @geppetto-db
-    (if (empty? selected-fields) {}
-        (apply merge
-               (map (fn [{:keys [field valtype strval floatval intval boolval]}]
-                    {(keyword field)
-                     (cond (= "strval" valtype) strval
-                           (= "floatval" valtype) floatval
-                           (= "intval" valtype) intval
-                           (= "boolval" valtype) (Boolean. boolval))})
-                  (select results-fields
-                          (fields :field :valtype :strval :floatval :intval :boolval)
-                          (where (and (= :simid simid)
-                                      (= :resultstype (name resultstype))
-                                      (apply or (map (fn [f] (= :field f))
-                                                   (map name selected-fields)))))))))))
+  [recorddir resultstype simid selected-fields]
+  (let [csv-file (format "%s/%s-results-%d.csv" recorddir (name resultstype) simid)
+        data (try (last (read-csv (str/split (slurp csv-file) #"\n")))
+                  (catch Exception e))]
+    (when data
+      (if selected-fields
+        (select-keys data selected-fields)
+        data))))
 
 (defn get-results
   [runid resultstype selected-fields]
-  (with-db @geppetto-db
-    (let [run (get-run runid)
-          sims (select simulations (fields :simid :controlparams :comparisonparams)
-                       (where {:runid runid}))]
-      (for [sim sims]
-        (assoc (get-sim-results (:simid sim) resultstype selected-fields)
-          :control-params (:controlparams sim)
-          :comparison-params (:comparisonparams sim))))))
+  (let [run (get-run runid)
+        recorddir (:recorddir run)
+        fields (set/union (set selected-fields) #{:params :controlparams :comparisonparams})]
+    (filter identity
+       (for [simid (range (:simcount run))]
+         (get-sim-results recorddir resultstype simid fields)))))
 
 (defn get-raw-results
   "Get results without associating in simid and control-params/comparison-params."
-  [runid]
-  (with-db @geppetto-db
-    (let [run (get-run runid)
-          sims (select simulations (fields :simid) (where {:runid runid}))
-          fields (into {} (for [resultstype [:control :comparison :comparative]]
-                            [resultstype (gather-results-fields runid resultstype)]))]
-      (for [sim sims]
-        (into {} (for [resultstype [:control :comparison :comparative]]
-                   [resultstype (get-sim-results (:simid sim) resultstype
-                                                 (get fields resultstype))]))))))
+  [recorddir simcount]
+  (apply concat (for [simid (range simcount)]
+                  (filter identity
+                     (for [resultstype [:control :comparsion :comparative]]
+                       (when-let [r (get-sim-results recorddir resultstype simid nil)]
+                         {resultstype r}))))))
