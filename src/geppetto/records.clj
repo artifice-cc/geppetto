@@ -25,7 +25,7 @@
    upload? save-record? verifying-claim?]
   (try
     (let [t (. System (currentTimeMillis))
-          recdir (str recordsdir "/" t)
+          recdir (.getAbsolutePath (file (str recordsdir "/" t)))
           params (read-params params-string)
           control-params (explode-params (vectorize-params (:control params)))
           comparison-params (when (:comparison params)
