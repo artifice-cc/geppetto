@@ -53,7 +53,7 @@
   (let [recorddir (:recorddir (get-run runid))
         csv-file (format "%s/%s-results-0.csv" recorddir (name resultstype))
         first-line (try (first (with-open [rdr (reader csv-file)] (line-seq rdr)))
-                        (catch Exception e))]
+                        (catch Exception e (println e)))]
     (if first-line
       (map keyword (sort (str/split first-line #",")))
       [])))
@@ -74,7 +74,7 @@
   [recorddir resultstype simid selected-fields]
   (let [csv-file (format "%s/%s-results-%d.csv" recorddir (name resultstype) simid)
         data (try (last (read-csv (str/split (slurp csv-file) #"\n")))
-                  (catch Exception e))]
+                  (catch Exception e (println e)))]
     (when data
       (if selected-fields
         (select-keys data selected-fields)
@@ -84,7 +84,7 @@
   [runid resultstype selected-fields]
   (let [run (get-run runid)
         recorddir (:recorddir run)
-        fields (set/union (set selected-fields) #{:params :controlparams :comparisonparams})]
+        fields (set/union (set selected-fields) #{:params :control-params :comparison-params})]
     (filter identity
        (for [simid (range (:simcount run))]
          (get-sim-results recorddir resultstype simid fields)))))
