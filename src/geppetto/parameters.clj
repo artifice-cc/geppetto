@@ -73,7 +73,7 @@
 (defn runs-with-parameters
   [paramid]
   (with-db @geppetto-db
-    (select runs (where {:paramid paramid}))))
+    (select runs (where {:paramid paramid}) (with parameters))))
 
 (defn delete-parameters
   [paramid]

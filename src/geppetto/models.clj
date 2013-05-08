@@ -8,7 +8,4 @@
   (pk :runid)
   (belongs-to parameters {:fk :paramid}))
 
-(defentity simulations
-  (pk :simid)
-  (belongs-to runs {:fk :runid}))
 
