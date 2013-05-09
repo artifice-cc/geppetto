@@ -39,6 +39,22 @@
                          (let [lm (geppetto.stats/linear-reg :_a :_b)]
                            (and (geppetto.test-utils/nearly= (first (:coefs lm)) 10.0 1.0)
                                 (> (:r-square lm) 0.8))))}))
-        run-fn (fn [comparative? params] (let [a (rand) b (* (+ 10 (rand)) a)] [{:a a :b b}]))
+        run-fn (fn [comparative? params] (let [a (rand) b (* (+ 10 (rand)) a)]
+                                          [{:a a :b b}]))
         eval-result (evaluate-claim run-fn claim "" "/usr/bin/git" "/tmp" 1)]
     (is (= true eval-result))))
+
+(deftest test-evaluate-claim-comparative
+  (let [claim (make-claim
+               tracking-baseline-high-avgprec
+               (parameters {:control {:foo 1} :comparison {:foo 2}})
+               (verify {:comparative
+                        ((> (geppetto.stats/mean :_diffA) 0.5)
+                         (> (geppetto.stats/mean :_diffB) 0.5))}))
+        run-fn (fn [comparative? params] (let [a (rand) b (* (+ 10 (rand)) a)]
+                                          [[{:a a :b b}]
+                                           [{:a (inc a) :b (inc b)}]
+                                           [{:diffA 1 :diffB 1}]]))
+        eval-result (evaluate-claim run-fn claim "" "/usr/bin/git" "/tmp" 1)]
+    (is (= true eval-result))))
+

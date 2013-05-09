@@ -21,12 +21,14 @@
 
 (defn run-with-new-record
   "Create a new folder for storing run data and execute the run."
-  [run-fn params-string datadir seed git recordsdir nthreads repetitions
+  [run-fn params-str-or-map datadir seed git recordsdir nthreads repetitions
    upload? save-record? verifying-claim?]
   (try
     (let [t (. System (currentTimeMillis))
           recdir (.getAbsolutePath (File. (str recordsdir "/" t)))
-          params (read-params params-string)
+          params (if (string? params-str-or-map) (read-params params-str-or-map)
+                     ;; else, should be a map; no reason to get the params from the db
+                     params-str-or-map)
           control-params (explode-params (vectorize-params (:control params)))
           comparison-params (when (:comparison params)
                               (explode-params (vectorize-params (:comparison params))))
