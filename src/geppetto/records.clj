@@ -51,7 +51,7 @@
         (.mkdirs (File. recdir)))
       (println (format "Running %d parameters * %d repetitions = %d simulations..."
                   (count control-params) repetitions simcount))
-      (binding [*out* *out*]
+      (binding [*out* (if verifying-claim? (java.io.StringWriter.) *out*)]
         (doall (run-partitions run-fn run-meta (not (nil? comparison-params))
                                (if comparison-params paired-params control-params)
                                recdir nthreads save-record? repetitions)))
