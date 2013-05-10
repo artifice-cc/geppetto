@@ -38,11 +38,27 @@
                          (> (geppetto.stats/mean :_b) 0.0)
                          (let [lm (geppetto.stats/linear-reg :_a :_b)]
                            (and (geppetto.test-utils/nearly= (first (:coefs lm)) 10.0 1.0)
-                                (> (:r-square lm) 0.8))))}))
+                                (clojure.test/is (> (:r-square lm) 0.8)))))}))
         run-fn (fn [comparative? params] (let [a (rand) b (* (+ 10 (rand)) a)]
                                           [{:a a :b b}]))
         eval-result (evaluate-claim run-fn claim "" "/usr/bin/git" "/tmp" 1)]
     (is (= true eval-result))))
+
+(deftest test-evaluate-claim-fail
+  (let [claim (make-claim
+               tracking-baseline-high-avgprec
+               (parameters "Testing/test-1")
+               (verify {:control
+                        ((< (geppetto.stats/mean :_a) 1.0)
+                         (> (geppetto.stats/mean :_b) 0.0)
+                         (let [lm (geppetto.stats/linear-reg :_a :_b)]
+                           (and (geppetto.test-utils/nearly= (first (:coefs lm)) 10.0 1.0)
+                                ;; notice the "2.0" here:
+                                (clojure.test/is (> (:r-square lm) 2.0)))))}))
+        run-fn (fn [comparative? params] (let [a (rand) b (* (+ 10 (rand)) a)]
+                                          [{:a a :b b}]))
+        eval-result (evaluate-claim run-fn claim "" "/usr/bin/git" "/tmp" 1)]
+    (is (= false eval-result))))
 
 (deftest test-evaluate-claim-comparative
   (let [claim (make-claim

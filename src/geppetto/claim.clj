@@ -53,17 +53,26 @@
     (let [verifications (apply concat
                                (for [resultstype [:control :comparison :comparative]]
                                  (for [to-verify (get (:verify claim) resultstype)]
-                                   {:code (:code to-verify)
-                                    :resultstype resultstype
-                                    :verification-result ((:result to-verify))})))]
+                                   (let [sw (java.io.StringWriter.)
+                                         pw (java.io.PrintWriter. sw)
+                                         result (binding [clojure.test/*test-out* pw
+                                                          clojure.test/*report-counters* (ref clojure.test/*initial-report-counters*)]
+                                                  ((:result to-verify)))]
+                                     {:code (:code to-verify)
+                                      :resultstype resultstype
+                                      :verification-result result
+                                      :verification-output (str sw)}))))]
       (doseq [ver verifications]
         (println (format "%s (%s):" (if (:verification-result ver) "PASS" "FAIL")
                     (name (:resultstype ver))))
-        (pprint (:code ver)))
+        (pprint (:code ver))
+        (println (:verification-output ver)))
       (if (every? :verification-result verifications)
         (do
-          (println (format "Claim \"%s\" verified." (:name claim)))
+          (println (format "*** Claim \"%s\" verified.\n\n" (:name claim)))
           true)
         (do
-          (println (format "Claim \"%s\" not verified." (:name claim)))
+          (println (format "!!! Claim \"%s\" not verified.\n\n" (:name claim)))
           false)))))
+
+
