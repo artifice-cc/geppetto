@@ -1,4 +1,5 @@
 (ns geppetto.claim
+  (:require [clojure.test])
   (:require [clojure.string :as str])
   (:use [clojure.pprint :only [pprint]])
   (:use [clojure.walk])
