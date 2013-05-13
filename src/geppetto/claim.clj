@@ -1,5 +1,5 @@
 (ns geppetto.claim
-  (:require [clojure.test])
+  (:use [clojure.test])
   (:require [clojure.string :as str])
   (:use [clojure.pprint :only [pprint]])
   (:use [clojure.walk])
@@ -45,7 +45,7 @@
 (defn evaluate-claim
   [run-fn claim datadir git recordsdir nthreads]
   (let [seed 1
-        repetitions 30
+        repetitions 100
         run-results (binding [rgen (new-seed seed)]
                       (run-with-new-record
                         run-fn (:parameters claim) datadir seed git recordsdir
