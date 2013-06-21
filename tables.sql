@@ -2,7 +2,7 @@
 --
 -- Host: localhost    Database: retrospect
 -- ------------------------------------------------------
--- Server version	5.5.31-0ubuntu0.13.04.1
+-- Server version	5.5.31-1
 
 /*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
 /*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
@@ -34,30 +34,7 @@ CREATE TABLE `parameters` (
   KEY `PROBLEM` (`problem`),
   KEY `NAME` (`name`),
   KEY `REVISION` (`rev`,`paramid`)
-) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=latin1;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Table structure for table `results_fields`
---
-
-DROP TABLE IF EXISTS `results_fields`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `results_fields` (
-  `rfid` int(11) NOT NULL AUTO_INCREMENT,
-  `simid` int(11) NOT NULL,
-  `resultstype` enum('control','comparison','comparative') NOT NULL,
-  `field` varchar(255) NOT NULL,
-  `valtype` enum('strval','floatval','intval','boolval') NOT NULL,
-  `strval` varchar(255) DEFAULT NULL,
-  `floatval` float DEFAULT NULL,
-  `intval` int(11) DEFAULT NULL,
-  `boolval` tinyint(1) DEFAULT NULL,
-  PRIMARY KEY (`rfid`),
-  KEY `SIMULATION` (`simid`),
-  KEY `FIELD` (`field`,`resultstype`)
-) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB AUTO_INCREMENT=691 DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -88,23 +65,7 @@ CREATE TABLE `runs` (
   `simcount` int(11) NOT NULL DEFAULT '0',
   PRIMARY KEY (`runid`),
   KEY `PARAMS` (`paramid`)
-) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=latin1;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Table structure for table `simulations`
---
-
-DROP TABLE IF EXISTS `simulations`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `simulations` (
-  `simid` int(11) NOT NULL AUTO_INCREMENT,
-  `runid` int(11) NOT NULL,
-  `controlparams` text NOT NULL,
-  `comparisonparams` text,
-  PRIMARY KEY (`simid`)
-) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB AUTO_INCREMENT=580 DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
 
@@ -116,4 +77,4 @@ CREATE TABLE `simulations` (
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2013-06-01 13:43:41
+-- Dump completed on 2013-06-20 22:31:34
