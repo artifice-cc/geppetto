@@ -91,9 +91,11 @@
 
 (defn get-raw-results
   "Get results without associating in simid and control-params/comparison-params."
-  [recorddir simcount]
-  (for [simid (range simcount)]
+  [recorddir]
+  (for [simid (map (fn [m] (first m))
+                   (filter #(re-matches "control-results-(%d)\.csv" %)
+                           (map .getName (file-seq (file recorddir)))))]
     (into {} (filter identity
-                (for [resultstype [:control :comparison :comparative]]
-                  (when-let [r (get-sim-results recorddir resultstype simid nil)]
-                    [resultstype r]))))))
+                     (for [resultstype [:control :comparison :comparative]]
+                       (when-let [r (get-sim-results recorddir resultstype simid nil)]
+                         [resultstype r]))))))

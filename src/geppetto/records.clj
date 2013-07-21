@@ -56,7 +56,7 @@
                                (if comparison-params paired-params control-params)
                                recdir nthreads save-record? repetitions)))
       (cond verifying-claim?
-            (get-raw-results recdir simcount)
+            (get-raw-results recdir)
             (and upload? (not= "" "localhost"))
             (do
               (submit-results recdir)
