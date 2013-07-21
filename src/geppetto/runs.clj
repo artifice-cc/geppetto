@@ -4,7 +4,7 @@
   (:use [korma.db :only [transaction]])
   (:use [korma.core])
   (:use [clojure-csv.core :only [parse-csv]])
-  (:use [clojure.java.io :only [reader]])
+  (:use [clojure.java.io :only [reader file]])
   (:use [geppetto.models])
   (:use [geppetto.misc]))
 
