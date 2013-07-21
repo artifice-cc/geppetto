@@ -10,6 +10,6 @@
                  [org.apache.commons/commons-math3 "3.0"]
                  [clojure-csv/clojure-csv "2.0.0-alpha1"]
                  [incanter "1.5.0-SNAPSHOT"]
-                 [resque-clojure "0.2.2"]]
+                 [cc.artifice/resque-clojure "0.3.0-SNAPSHOT"]]
   :profiles {:dev {:dependencies
                    [[com.h2database/h2 "1.3.171"]]}})
