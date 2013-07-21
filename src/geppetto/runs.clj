@@ -94,7 +94,7 @@
   [recorddir]
   (for [simid (map (fn [m] (first m))
                    (filter #(re-matches #"control-results-(%d)\.csv" %)
-                           (map .getName (file-seq (file recorddir)))))]
+                           (map #(.getName %) (file-seq (file recorddir)))))]
     (into {} (filter identity
                      (for [resultstype [:control :comparison :comparative]]
                        (when-let [r (get-sim-results recorddir resultstype simid nil)]
