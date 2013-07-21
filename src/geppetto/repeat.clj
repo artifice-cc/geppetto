@@ -63,7 +63,7 @@
         old-results (doall
                      (extract-relevant-results
                       (sort-by (comp :simulation :control)
-                               (get-raw-results (:recdir old-run)))
+                               (get-raw-results (:recorddir old-run)))
                       only-ignore))
         ;; note, new-results will have a :params field (old-results does not),
         ;; and this will be exploited below
