@@ -7,25 +7,17 @@
   (:require [geppetto.workers :as workers]))
 
 (def geppetto-db (ref nil))
-(def geppetto-dbhost (ref nil))
-(def geppetto-dbname (ref nil))
-(def geppetto-dbuser (ref nil))
-(def geppetto-dbpassword (ref nil))
 (def quiet-mode (ref nil))
 
 (defn setup-geppetto
-  [dbhost dbname dbuser dbpassword quiet?]
+  [dbhost dbport dbname dbuser dbpassword quiet?]
   (workers/load-resque)
   (set-delimiters "`")
   (dosync
    (alter geppetto-db
           (constantly
            (create-db
-            (mysql {:db dbname :user dbuser :password dbpassword :host dbhost}))))
-   (alter geppetto-dbhost (constantly dbhost))
-   (alter geppetto-dbname (constantly dbname))
-   (alter geppetto-dbuser (constantly dbuser))
-   (alter geppetto-dbpassword (constantly dbpassword))
+            (mysql {:db dbname :port dbport :user dbuser :password dbpassword :host dbhost}))))
    (alter quiet-mode (constantly quiet?))))
 
 (defmacro with-db  
