@@ -1,13 +1,16 @@
 (ns geppetto.git
   (:use [clojure.string :only [split-lines trim]])
-  (:use [clojure.java.shell :only [sh]]))
+  (:use [clojure.java.shell :only [sh]])
+  (:use [clj-time coerce format]))
+
+(def custom-formatter (formatter "YYYY-MM-dd hh:mm:ss"))
 
 (defn get-commit-date
   [git pwd commit]
   (let [git-output (:out (sh git (format "--work-tree=%s" pwd)
                              "show" "--format=raw" commit))
         timestamp (second (re-find #"committer .* (\d+) [-+]\d{4}" git-output))]
-    (:out (sh "date" "+%Y-%m-%d %H:%M:%S" (format "--date=@%s" timestamp)))))
+    (unparse custom-formatter (from-long (* 1000 (Long/parseLong timestamp))))))
 
 (defn git-meta-info
   [git pwd]

@@ -10,12 +10,12 @@
 
 (deftest test-make-claim
   (let [claim (make-claim tracking-baseline-high-avgprec
-                          (parameters "Tracking/baseline")
+                          (parameters "Tracking/test-1")
                           (verify {:control
                                    ((> (geppetto.stats/mean :_AvgPrec) 0.75)
                                     (> (geppetto.stats/mean :_AvgCoverage) 0.75))}))]
     (is (= 'tracking-baseline-high-avgprec (:name claim)))
-    (is (= "Tracking/baseline" (:parameters claim)))
+    (is (= "Tracking/test-1" (:parameters claim)))
     (is (= '(> (geppetto.stats/mean :_AvgPrec) 0.75)
            (:code (first (:control (:verify claim))))))
     (is (= '(> (geppetto.stats/mean :_AvgCoverage) 0.75)
@@ -41,7 +41,7 @@
                                 (clojure.test/is (> (:r-square lm) 0.8)))))}))
         run-fn (fn [comparative? params] (let [a (rand) b (* (+ 10 (rand)) a)]
                                           [{:a a :b b}]))
-        eval-result (evaluate-claim run-fn claim "" "/usr/bin/git" "/tmp" 1)]
+        eval-result (evaluate-claim run-fn claim "" "git" "test/records" 1)]
     (is (= true eval-result))))
 
 (deftest test-evaluate-claim-fail
@@ -57,7 +57,7 @@
                                 (clojure.test/is (> (:r-square lm) 2.0)))))}))
         run-fn (fn [comparative? params] (let [a (rand) b (* (+ 10 (rand)) a)]
                                           [{:a a :b b}]))
-        eval-result (evaluate-claim run-fn claim "" "/usr/bin/git" "/tmp" 1)]
+        eval-result (evaluate-claim run-fn claim "" "git" "test/records" 1)]
     (is (= false eval-result))))
 
 (deftest test-evaluate-claim-comparative
@@ -71,6 +71,6 @@
                                           [[{:a a :b b}]
                                            [{:a (inc a) :b (inc b)}]
                                            [{:diffA 1 :diffB 1}]]))
-        eval-result (evaluate-claim run-fn claim "" "/usr/bin/git" "/tmp" 1)]
+        eval-result (evaluate-claim run-fn claim "" "git" "test/records" 1)]
     (is (= true eval-result))))
 

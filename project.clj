@@ -7,8 +7,9 @@
                  [korma "0.3.0-RC5"]
                  [mysql/mysql-connector-java "5.1.6"]
                  [org.apache.commons/commons-math3 "3.0"]
+                 [clj-time "0.6.0"]
                  [clojure-csv/clojure-csv "2.0.0-alpha1"]
-                 [incanter "1.5.0-SNAPSHOT"]
+                 [incanter "1.5.4"]
                  [cc.artifice/resque-clojure "0.3.0-SNAPSHOT"]]
   :profiles {:dev {:dependencies
                    [[com.h2database/h2 "1.3.171"]]}})

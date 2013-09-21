@@ -85,9 +85,10 @@
 (defn get-raw-results
   "Get results without associating in simid and control-params/comparison-params."
   [recorddir]
-  (for [simid (map (fn [m] (first m))
-                   (filter #(re-matches #"control-results-(%d)\.csv" %)
-                           (map #(.getName %) (file-seq (file recorddir)))))]
+  (for [simid (map #(Integer/parseInt %)
+                   (filter identity
+                           (map #(second (re-matches #"control-results-(\d+)\.csv" (.getName %)))
+                                (file-seq (file recorddir)))))]
     (into {} (filter identity
                      (for [resultstype [:control :comparison :comparative]]
                        (when-let [r (get-sim-results recorddir resultstype simid nil)]

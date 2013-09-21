@@ -48,7 +48,7 @@
         repetitions 100
         run-results (binding [rgen (new-seed seed)]
                       (run-with-new-record
-                        run-fn (:parameters claim) datadir seed git recordsdir
+                       run-fn (:parameters claim) datadir seed git recordsdir
                         nthreads repetitions false true true))]
     (dosync (alter results (constantly run-results)))
     (let [verifications (apply concat
