@@ -1,30 +1,18 @@
 (ns geppetto.misc
-  (:require [clojure.java.jdbc :as jdbc])
-  (:use [korma.db :only [create-db mysql]])
+  (:use [korma.db :only [defdb mysql]])
   (:use [korma.config])
   (:import (java.util Date))
   (:import (java.text SimpleDateFormat))
   (:require [geppetto.workers :as workers]))
 
-(def geppetto-db (ref nil))
 (def quiet-mode (ref nil))
 
 (defn setup-geppetto
   [dbhost dbport dbname dbuser dbpassword quiet?]
   (workers/load-resque)
   (set-delimiters "`")
-  (dosync
-   (alter geppetto-db
-          (constantly
-           (create-db
-            (mysql {:db dbname :port dbport :user dbuser :password dbpassword :host dbhost}))))
-   (alter quiet-mode (constantly quiet?))))
-
-(defmacro with-db  
-  "Execute all queries within the body using the given db spec"
-  [db & body]
-  `(jdbc/with-connection (korma.db/get-connection ~db)
-     ~@body))
+  (defdb geppetto-db (mysql {:db dbname :port dbport :user dbuser :password dbpassword :host dbhost}))
+  (dosync (alter quiet-mode (constantly quiet?))))
 
 (defn format-date-ms
   [ms]
