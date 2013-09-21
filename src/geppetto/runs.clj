@@ -1,8 +1,7 @@
 (ns geppetto.runs
   (:require [clojure.string :as str])
   (:require [clojure.set :as set])
-  (:use [korma.db :only [transaction]])
-  (:use [korma.core])
+  (:use [korma db core])
   (:use [clojure-csv.core :only [parse-csv]])
   (:use [clojure.java.io :only [reader file]])
   (:use [geppetto.models])
@@ -10,36 +9,42 @@
 
 (defn commit-run
   [run-meta]
-  (:generated_key (insert runs (values [run-meta]))))
+  (with-db @geppetto-db
+    (:generated_key (insert runs (values [run-meta])))))
 
 (defn get-run
   [runid]
-  (first (select runs
-                 (with parameters)
-                 (where {:runid runid})
-                 (fields :runid :starttime :endtime :username
-                         :seed :nthreads :repetitions :simcount
-                         :pwd :hostname :recorddir :datadir :project
-                         :commit :commitdate :commitmsg :branch
-                         :runs.paramid :parameters.name
-                         :parameters.problem :parameters.description
-                         :parameters.control :parameters.comparison))))
+  (with-db @geppetto-db
+    (first (select runs
+                   (with parameters)
+                   (where {:runid runid})
+                   (fields :runid :starttime :endtime :username
+                           :seed :nthreads :repetitions :simcount
+                           :pwd :hostname :recorddir :datadir :project
+                           :commit :commitdate :commitmsg :branch
+                           :runs.paramid :parameters.name
+                           :parameters.problem :parameters.description
+                           :parameters.control :parameters.comparison)))))
 
 (defn list-runs
   []
-  (select runs (with parameters)))
+  (with-db @geppetto-db
+    (select runs (with parameters))))
 
 (defn delete-run
   [runid]
-  (delete runs (where {:runid runid})))
+  (with-db @geppetto-db
+    (delete runs (where {:runid runid}))))
 
 (defn list-projects
   []
-  (sort (set (filter identity (map :project (select runs (fields :project)))))))
+  (with-db @geppetto-db
+    (sort (set (filter identity (map :project (select runs (fields :project))))))))
 
 (defn set-project
   [runid project]
-  (update runs (set-fields {:project project}) (where {:runid runid})))
+  (with-db @geppetto-db
+    (update runs (set-fields {:project project}) (where {:runid runid}))))
 
 (defn gather-results-fields
   [runid resultstype]
