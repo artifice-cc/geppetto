@@ -93,6 +93,7 @@
         (update-in params [:control] read-string)))))
 
 (defn vectorize-params
+  "Put every value in the input map into a vector."
   [params]
   (reduce (fn [m k] (let [v (k params)]
                       (assoc m k (if (vector? v) v [v]))))
