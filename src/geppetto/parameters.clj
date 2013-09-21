@@ -6,53 +6,47 @@
 
 (defn get-params
   ([paramid]
-     (first (with-db @geppetto-db
-              (select parameters (where {:paramid paramid})))))
+     (first (select parameters (where {:paramid paramid}))))
   ([problem name]
-     (first (with-db @geppetto-db
-              (select parameters
-                      (where {:name name :problem problem})
-                      (order :rev :DESC) (limit 1))))))
+     (first (select parameters
+                    (where {:name name :problem problem})
+                    (order :rev :DESC) (limit 1)))))
 
 (defn parameters-latest-rev
   [problem name]
-  (or (:rev (first (with-db @geppetto-db
-                     (select parameters
-                             (fields :rev)
-                             (where {:problem problem :name name})
-                             (order :rev :DESC)
-                             (limit 1)))))
+  (or (:rev (first (select parameters
+                           (fields :rev)
+                           (where {:problem problem :name name})
+                           (order :rev :DESC)
+                           (limit 1))))
       0))
 
 (defn parameters-latest
   [problem name]
-  (first (with-db @geppetto-db
-           (select parameters
-                   (where {:problem problem :name name})
-                   (order :rev :DESC)
-                   (limit 1)))))
+  (first (select parameters
+                 (where {:problem problem :name name})
+                 (order :rev :DESC)
+                 (limit 1))))
 
 (defn parameters-latest?
   [paramid]
   (let [{:keys [problem name rev]}
-        (first (with-db @geppetto-db
-                 (select parameters (fields :problem :name :rev)
-                         (where {:paramid paramid}))))]
+        (first (select parameters (fields :problem :name :rev)
+                       (where {:paramid paramid})))]
     (= rev (parameters-latest-rev problem name))))
 
 ;; an "update" is really an insert with a new revision
 (defn update-parameters
   [params]
   (:generated_key
-   (with-db @geppetto-db
-     (insert parameters (values [{:problem (:problem params)
-                                  :name (:name params)
-                                  :rev (inc (parameters-latest-rev (:problem params)
-                                                                   (:name params)))
-                                  :comparison (when (not-empty (:comparison params))
-                                                (:comparison params))
-                                  :control (:control params)
-                                  :description (:description params)}])))))
+   (insert parameters (values [{:problem (:problem params)
+                                :name (:name params)
+                                :rev (inc (parameters-latest-rev (:problem params)
+                                                                 (:name params)))
+                                :comparison (when (not-empty (:comparison params))
+                                              (:comparison params))
+                                :control (:control params)
+                                :description (:description params)}]))))
 
 (defn new-parameters
   [params]
@@ -61,26 +55,23 @@
 (defn list-parameters
   []
   (let [problem-name-pairs (sort (set (map (fn [{:keys [problem name]}] [problem name])
-                                         (with-db @geppetto-db
-                                           (select parameters (fields :problem :name))))))
+                                           (select parameters (fields :problem :name)))))
         latest-params (for [[problem name] problem-name-pairs]
                         (parameters-latest problem name))]
     (reduce (fn [m ps]
-         (update-in m [(if (:comparison ps) :comparative :non-comparative)] conj ps))
-       {:comparative [] :non-comparative []}
-       latest-params)))
+              (update-in m [(if (:comparison ps) :comparative :non-comparative)] conj ps))
+            {:comparative [] :non-comparative []}
+            latest-params)))
 
 (defn runs-with-parameters
   [paramid]
-  (with-db @geppetto-db
-    (select runs (where {:paramid paramid}) (with parameters))))
+  (select runs (where {:paramid paramid}) (with parameters)))
 
 (defn delete-parameters
   [paramid]
-  (with-db @geppetto-db
-    (let [ps (get-params paramid)]
-      (when ps
-        (delete parameters (where {:problem (:problem ps) :name (:name ps)}))))))
+  (let [ps (get-params paramid)]
+    (when ps
+      (delete parameters (where {:problem (:problem ps) :name (:name ps)})))))
 
 (defn extract-problem
   [params-string]

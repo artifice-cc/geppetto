@@ -10,43 +10,36 @@
 
 (defn commit-run
   [run-meta]
-  (with-db @geppetto-db
-    (:generated_key (with-db @geppetto-db (insert runs (values [run-meta]))))))
+  (:generated_key (insert runs (values [run-meta]))))
 
 (defn get-run
   [runid]
-  (first
-   (with-db @geppetto-db
-     (select runs
-             (with parameters)
-             (where {:runid runid})
-             (fields :runid :starttime :endtime :username
-                     :seed :nthreads :repetitions :simcount
-                     :pwd :hostname :recorddir :datadir :project
-                     :commit :commitdate :commitmsg :branch
-                     :runs.paramid :parameters.name
-                     :parameters.problem :parameters.description
-                     :parameters.control :parameters.comparison)))))
+  (first (select runs
+                 (with parameters)
+                 (where {:runid runid})
+                 (fields :runid :starttime :endtime :username
+                         :seed :nthreads :repetitions :simcount
+                         :pwd :hostname :recorddir :datadir :project
+                         :commit :commitdate :commitmsg :branch
+                         :runs.paramid :parameters.name
+                         :parameters.problem :parameters.description
+                         :parameters.control :parameters.comparison))))
 
 (defn list-runs
   []
-  (with-db @geppetto-db
-    (select runs (with parameters))))
+  (select runs (with parameters)))
 
 (defn delete-run
   [runid]
-  (with-db @geppetto-db
-    (delete runs (where {:runid runid}))))
+  (delete runs (where {:runid runid})))
 
 (defn list-projects
   []
-  (sort (set (filter identity (map :project (with-db @geppetto-db
-                                       (select runs (fields :project))))))))
+  (sort (set (filter identity (map :project (select runs (fields :project)))))))
 
 (defn set-project
   [runid project]
-  (with-db @geppetto-db
-    (update runs (set-fields {:project project}) (where {:runid runid}))))
+  (update runs (set-fields {:project project}) (where {:runid runid})))
 
 (defn gather-results-fields
   [runid resultstype]
