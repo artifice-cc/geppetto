@@ -52,16 +52,32 @@
     (> 0 (solution-delta opt-type opt-metric results-new results-old))
     (>= 0 (solution-delta opt-type opt-metric results-new results-old))))
 
+(defn stopping-condition-satisfied?
+  [keeps-per-temp temperature-schedule stop-cond1 stop-cond2]
+  "Number of kept results is less than stop-cond1-% of
+   temperature-schedule for stop-cond2 consecutive series of
+   temperature-schedule steps."
+  (let [recent-keeps (take stop-cond2 (sort-by first (seq keeps-per-temp)))
+        keep-counts (map (fn [[t rs]] (count (filter identity rs))) recent-keeps)]
+    (println "stopping condition satisfied?" (count keeps-per-temp) keep-counts)
+    ;; do we have enough recent temperatures to warrant this question?
+    (and (<= stop-cond2 (count keeps-per-temp))
+         ;; all of the last stop-cond2 keep sets need to be defficient to stop
+         (every? (fn [c] (< c (* stop-cond1 temperature-schedule))) keep-counts))))
+
 ;; simulated annealing
 (defn optimize-loop
-  [control-params run-fn opt-type opt-metric alpha initial-temperature temperature-schedule max-steps]
+  [control-params run-fn opt-type opt-metric
+   alpha initial-temperature temperature-schedule stop-cond1 stop-cond2]
   (loop [best-results nil
          results []
+         keeps-per-temp {} ;; keyed by temp, vals: if keeping results, then results, else nil
          attempted-param-indices []
          temperature initial-temperature
          step 1]
     (let [ps-indices (choose-param-indices control-params attempted-param-indices)]
-      (if (or (nil? ps-indices) (> step max-steps))
+      (if (or (nil? ps-indices)
+              (stopping-condition-satisfied? keeps-per-temp temperature-schedule stop-cond1 stop-cond2))
         best-results
         (let [ps (select-params-from-indices control-params ps-indices)
               [control-results _ _] (run-fn false ps)
@@ -77,12 +93,14 @@
           (println "Best?" best? "Keep?" keep? "temperature" temperature "step" step)
           (recur (if best? control-results best-results)
                  (if keep? (conj results control-results) results)
+                 (update-in keeps-per-temp [temperature] conj (if keep? results nil))
                  (conj attempted-param-indices ps-indices)
                  (if (= 0 (mod step temperature-schedule)) (* alpha temperature) temperature)
                  (inc step)))))))
 
 (defn optimize
-  [run-fn params-str-or-map opt-type opt-metric alpha initial-temperature temperature-schedule max-steps
+  [run-fn params-str-or-map opt-type opt-metric
+   alpha initial-temperature temperature-schedule stop-cond1 stop-cond2
    datadir seed git recordsdir nthreads repetitions upload? save-record?]
   (let [t (. System (currentTimeMillis))
         recdir (.getAbsolutePath (File. (str recordsdir "/" t)))
@@ -105,5 +123,5 @@
     (println (format "Parameter space: %d possible parameters"
                      (reduce * (map count (vals control-params)))))
     (optimize-loop control-params run-fn opt-type opt-metric
-                   alpha initial-temperature temperature-schedule max-steps)))
+                   alpha initial-temperature temperature-schedule stop-cond1 stop-cond2)))
 

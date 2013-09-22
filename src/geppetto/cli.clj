@@ -18,8 +18,13 @@
              ["--upload" "Upload?" :default true :parse-fn #(= "true" %)]
              ["--save-record" "Save in record directory?" :default true :parse-fn #(= "true" %)]
              ["--quiet" "Quiet mode (hide progress messages)?" :default false :parse-fn #(= "true" %)]
-             ["--metric" "Optimize metric" :parse-fn keyword]
-             ["--min-or-max" "Optimize to 'min' or 'max' of metric" :default :max :parse-fn keyword])
+             ["--opt-metric" "Optimize metric" :parse-fn keyword]
+             ["--opt-min-or-max" "Optimize to 'min' or 'max' of metric" :default :max :parse-fn keyword]
+             ["--opt-alpha" "Optimize alpha (double)" :default 0.95 :parse-fn #(Double. %)]
+             ["--opt-init-temp" "Optimize initial temperature (double)" :default 1 :parse-fn #(Double. %)]
+             ["--opt-temp-sched" "Optimize temperature schedule (int)" :default 100 :parse-fn #(Integer. %)]
+             ["--opt-stop-cond1" "Optimize stopping condition 1 (double)" :default 0.02 :parse-fn #(Double. %)]
+             ["--opt-stop-cond2" "Optimize stopping condition 2 (int)" :default 5 :parse-fn #(Integer. %)])
         props (read-properties "config.properties")]
     (setup-geppetto (:geppetto_dbhost props)
                     (:geppetto_dbport props)
@@ -40,7 +45,9 @@
                                  (:repetitions options) (:upload options) (:save-record options) false))
 
           (= "optimize" (:action options))
-          (optimize run-fn (:params options) (:min-or-max options) (:metric options) 0.95 10 10 50
+          (optimize run-fn (:params options) (:opt-min-or-max options) (:opt-metric options)
+                    (:opt-alpha params) (:opt-init-temp params) (:opt-temp-sched params)
+                    (:opt-stop-cond1 params) (:opt-stop-cond2 params)
                     (:datadir props) (:seed options) (:git props) (:recordsdir props) (:nthreads options)
                     (:repetitions options) (:upload options) (:save-record options))
 
