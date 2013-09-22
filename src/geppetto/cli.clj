@@ -17,7 +17,9 @@
              ["--seed" "Seed" :default 0 :parse-fn #(Integer. %)]
              ["--upload" "Upload?" :default true :parse-fn #(= "true" %)]
              ["--save-record" "Save in record directory?" :default true :parse-fn #(= "true" %)]
-             ["--quiet" "Quiet mode (hide progress messages)?" :default false :parse-fn #(= "true" %)])
+             ["--quiet" "Quiet mode (hide progress messages)?" :default false :parse-fn #(= "true" %)]
+             ["--metric" "Optimize metric" :parse-fn keyword]
+             ["--min-or-max" "Optimize to 'min' or 'max' of metric" :default :max :parse-fn keyword])
         props (read-properties "config.properties")]
     (setup-geppetto (:geppetto_dbhost props)
                     (:geppetto_dbport props)
@@ -38,7 +40,7 @@
                                  (:repetitions options) (:upload options) (:save-record options) false))
 
           (= "optimize" (:action options))
-          (optimize run-fn (:params options) :max :f1 0.95 10 10 50
+          (optimize run-fn (:params options) (:min-or-max options) (:metric options) 0.95 10 10 50
                     (:datadir props) (:seed options) (:git props) (:recordsdir props) (:nthreads options)
                     (:repetitions options) (:upload options) (:save-record options))
 
