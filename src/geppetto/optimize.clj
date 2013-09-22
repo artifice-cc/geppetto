@@ -25,16 +25,15 @@
     (assoc param-indices chosen-key chosen-index)))
 
 (defn choose-param-indices
-  [vparams attempted-param-indices]
-  (let [attempted (set attempted-param-indices)]
-    (if (empty? attempted-param-indices)
-      ;; start with random params
-      (into {} (for [[k vs] (seq vparams)] [k (rand-int (count vs))]))
-      (loop [i 0]
-        (when (< i 100)
-          (let [new-param-indices (random-neighboring-indices vparams (last attempted-param-indices))]
-            (if (attempted new-param-indices) (recur (inc i))
-                new-param-indices)))))))
+  [vparams last-param-indices attempted-param-indices]
+  (if (nil? last-param-indices)
+    ;; start with random params
+    (into {} (for [[k vs] (seq vparams)] [k (rand-int (count vs))]))
+    (loop [i 0]
+      (when (< i 100)
+        (let [new-param-indices (random-neighboring-indices vparams last-param-indices)]
+          (if (attempted-param-indices new-param-indices) (recur (inc i))
+              new-param-indices))))))
 
 (defn select-params-from-indices
   [vparams param-indices]
@@ -76,10 +75,11 @@
          all-results []
          kept-results []
          keeps-per-temp {} ;; keyed by temp, vals: if keeping results, then results, else nil
-         attempted-param-indices []
+         last-param-indices nil
+         attempted-param-indices #{}
          temperature initial-temperature
          step 1]
-    (let [ps-indices (choose-param-indices control-params attempted-param-indices)]
+    (let [ps-indices (choose-param-indices control-params last-param-indices attempted-param-indices)]
       (if (or (nil? ps-indices)
               (stopping-condition-satisfied? keeps-per-temp temperature-schedule stop-cond1 stop-cond2))
         [best-results all-results]
@@ -104,6 +104,7 @@
                  (conj all-results control-results)
                  (if keep? (conj kept-results control-results) kept-results)
                  (update-in keeps-per-temp [temperature] conj (if keep? control-results nil))
+                 (if keep? ps-indices last-param-indices)
                  (conj attempted-param-indices ps-indices)
                  (if (= 0 (mod step temperature-schedule)) (* alpha temperature) temperature)
                  (inc step)))))))
