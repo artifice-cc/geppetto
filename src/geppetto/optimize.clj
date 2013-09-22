@@ -84,7 +84,7 @@
               (stopping-condition-satisfied? keeps-per-temp temperature-schedule stop-cond1 stop-cond2))
         [best-results all-results]
         (let [ps (assoc (select-params-from-indices control-params ps-indices)
-                   :simulation step)
+                   :simulation (dec step))
               [control-results _ _] (run-fn false ps)
               sol-delta (when (not-empty kept-results)
                           (solution-delta opt-type opt-metric control-results (last kept-results)))
