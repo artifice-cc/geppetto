@@ -84,7 +84,7 @@
               sol-delta (when (not-empty results)
                           (solution-delta opt-type opt-metric control-results (last results)))
               prob (when (not-empty results)
-                     (Math/exp (- (/ 1.0 temperature) sol-delta)))
+                     (Math/exp (* (- (/ 1.0 temperature)) sol-delta)))
               best? (or (nil? best-results)
                         (better-than? opt-type opt-metric control-results best-results true))
               keep? (or (empty? results)
