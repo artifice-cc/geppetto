@@ -58,7 +58,7 @@
                                recdir nthreads save-record? repetitions)))
       (cond verifying-claim?
             (get-raw-results recdir)
-            (and upload? (not= "" "localhost"))
+            (and save-record? upload?)
             (do
               (submit-results recdir)
               (System/exit 0))

@@ -1,10 +1,13 @@
 (ns geppetto.optimize
+  (:import (java.util Date))
   (:import [java.io File])
   (:require [clojure.string :as str])
   (:use [clojure.java.io :only [file]])
   (:use [geppetto.misc :only [format-date-ms]])
   (:use [geppetto.git :only [git-meta-info]])
   (:use [geppetto.runs :only [commit-run get-raw-results]])
+  (:use [geppetto.records :only [submit-results]])
+  (:use [geppetto.local :only [write-results-csv]])
   (:use [geppetto.r :only [results-to-rbin]])
   (:use [geppetto.parameters :only [read-params explode-params vectorize-params]]))
 
@@ -67,10 +70,11 @@
 
 ;; simulated annealing
 (defn optimize-loop
-  [control-params run-fn opt-type opt-metric
+  [control-params run-fn recdir opt-type opt-metric
    alpha initial-temperature temperature-schedule stop-cond1 stop-cond2]
   (loop [best-results nil
-         results []
+         all-results []
+         kept-results []
          keeps-per-temp {} ;; keyed by temp, vals: if keeping results, then results, else nil
          attempted-param-indices []
          temperature initial-temperature
@@ -78,24 +82,28 @@
     (let [ps-indices (choose-param-indices control-params attempted-param-indices)]
       (if (or (nil? ps-indices)
               (stopping-condition-satisfied? keeps-per-temp temperature-schedule stop-cond1 stop-cond2))
-        best-results
-        (let [ps (select-params-from-indices control-params ps-indices)
+        [best-results all-results]
+        (let [ps (assoc (select-params-from-indices control-params ps-indices)
+                   :simulation step)
               [control-results _ _] (run-fn false ps)
-              sol-delta (when (not-empty results)
-                          (solution-delta opt-type opt-metric control-results (last results)))
-              prob (when (not-empty results)
+              sol-delta (when (not-empty kept-results)
+                          (solution-delta opt-type opt-metric control-results (last kept-results)))
+              prob (when sol-delta
                      (Math/exp (* (- (/ 1.0 temperature)) sol-delta)))
               best? (or (nil? best-results)
                         (better-than? opt-type opt-metric control-results best-results true))
-              keep? (or (empty? results)
-                        (better-than? opt-type opt-metric control-results (last results) false)
+              keep? (or (empty? kept-results)
+                        (better-than? opt-type opt-metric control-results (last kept-results) false)
                         (< (rand) prob))]
+          (write-results-csv (format "%s/control-results-%d.csv" recdir (:simulation ps))
+                             control-results)
           (prn control-results)
           (println "Best?" best? "Keep?" keep? "temperature" temperature
                    "step" step "solution delta" sol-delta "prob" prob)
           (recur (if best? control-results best-results)
-                 (if keep? (conj results control-results) results)
-                 (update-in keeps-per-temp [temperature] conj (if keep? results nil))
+                 (conj all-results control-results)
+                 (if keep? (conj kept-results control-results) kept-results)
+                 (update-in keeps-per-temp [temperature] conj (if keep? control-results nil))
                  (conj attempted-param-indices ps-indices)
                  (if (= 0 (mod step temperature-schedule)) (* alpha temperature) temperature)
                  (inc step)))))))
@@ -113,17 +121,26 @@
         ;; don't explode params, just vectorize
         control-params (vectorize-params (:control params))
         working-directory (System/getProperty "user.dir")
-        simcount 1
         run-meta (merge {:starttime (format-date-ms t)
                          :paramid (:paramid params)
                          :datadir datadir :recorddir recdir :nthreads nthreads
                          :pwd working-directory :repetitions repetitions :seed seed
                          :hostname (.getHostName (java.net.InetAddress/getLocalHost))
-                         :username (System/getProperty "user.name")
-                         :simcount simcount}
-                        (git-meta-info git working-directory))]
+                         :username (System/getProperty "user.name")}
+                        (git-meta-info git working-directory))
+        start-time (.getTime (Date.))]
     (println (format "Parameter space: %d possible parameters"
                      (reduce * (map count (vals control-params)))))
-    (optimize-loop control-params run-fn opt-type opt-metric
-                   alpha initial-temperature temperature-schedule stop-cond1 stop-cond2)))
-
+    (when save-record?
+      (println (format "Making new directory %s ..." recdir))
+      (.mkdirs (File. recdir))
+      (spit (format "%s/meta.clj" recdir) (pr-str run-meta)))
+    (let [[best-results results] (optimize-loop control-params run-fn recdir opt-type opt-metric
+                                                alpha initial-temperature temperature-schedule
+                                                stop-cond1 stop-cond2)
+          run-meta-stopped (assoc run-meta :endtime (format-date-ms (. System (currentTimeMillis)))
+                                  :simcount (count results))]
+      (when save-record? (spit (format "%s/meta.clj" recdir) (pr-str run-meta-stopped)))
+      (when (and save-record? upload?)
+        (submit-results recdir))
+      (System/exit 0))))

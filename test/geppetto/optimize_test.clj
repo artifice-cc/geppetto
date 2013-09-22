@@ -10,6 +10,6 @@
   (let [run-fn (fn [comparative? params] [{:result (* (:Foo params) (:Bar params) (:Baz params))}])
         results (optimize run-fn {:control {:Foo [2 3 5] :Bar [7 11] :Baz 13 :Quux (vec (repeat 10000 1))}}
                           :max :result 0.95 10.0 10 0.03 5
-                          "data" 0 "git" "test/records" 1 1 false false)]
+                          "data" 0 "git" "test/records" 1 1 false true)]
     ;; best is 5 * 11 * 13 = 715
     (is (= results {:result 715}))))
