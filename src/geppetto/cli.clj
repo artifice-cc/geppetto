@@ -46,8 +46,8 @@
 
           (= "optimize" (:action options))
           (optimize run-fn (:params options) (:opt-min-or-max options) (:opt-metric options)
-                    (:opt-alpha params) (:opt-init-temp params) (:opt-temp-sched params)
-                    (:opt-stop-cond1 params) (:opt-stop-cond2 params)
+                    (:opt-alpha options) (:opt-init-temp options) (:opt-temp-sched options)
+                    (:opt-stop-cond1 options) (:opt-stop-cond2 options)
                     (:datadir props) (:seed options) (:git props) (:recordsdir props) (:nthreads options)
                     (:repetitions options) (:upload options) (:save-record options))
 
