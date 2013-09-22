@@ -81,16 +81,18 @@
         best-results
         (let [ps (select-params-from-indices control-params ps-indices)
               [control-results _ _] (run-fn false ps)
+              sol-delta (when (not-empty results)
+                          (solution-delta opt-type opt-metric control-results (last results)))
               prob (when (not-empty results)
-                     (Math/exp (- (/ 1.0 temperature)
-                                  (solution-delta opt-type opt-metric control-results (last results)))))
+                     (Math/exp (- (/ 1.0 temperature) sol-delta)))
               best? (or (nil? best-results)
                         (better-than? opt-type opt-metric control-results best-results true))
               keep? (or (empty? results)
                         (better-than? opt-type opt-metric control-results (last results) false)
                         (< (rand) prob))]
           (prn control-results)
-          (println "Best?" best? "Keep?" keep? "temperature" temperature "step" step)
+          (println "Best?" best? "Keep?" keep? "temperature" temperature
+                   "step" step "solution delta" sol-delta "prob" prob)
           (recur (if best? control-results best-results)
                  (if keep? (conj results control-results) results)
                  (update-in keeps-per-temp [temperature] conj (if keep? results nil))
