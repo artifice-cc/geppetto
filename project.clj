@@ -1,9 +1,11 @@
-(defproject cc.artifice/geppetto "2.4.0-SNAPSHOT"
+(defproject cc.artifice/geppetto "2.5.0-SNAPSHOT"
   :description "Backend support for experimental work."
-  :url "http://artifice.cc/geppetto"
+  :url "http://geppetto.artifice.cc"
   :license {:name "Eclipse Public License"
             :url "http://www.eclipse.org/legal/epl-v10.html"}
   :dependencies [[org.clojure/clojure "1.5.1"]
+                 [org.clojure/tools.cli "0.2.2"]
+                 [propertea "1.2.3"]
                  [korma "0.3.0-RC5"]
                  [mysql/mysql-connector-java "5.1.6"]
                  [org.apache.commons/commons-math3 "3.0"]
