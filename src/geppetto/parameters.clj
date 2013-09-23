@@ -86,6 +86,19 @@
   [params-string]
   (first (str/split params-string #"/")))
 
+(defn handle-params-fn
+  [v]
+  (cond (and (= 'range (first v))
+             (every? number? (rest v)))
+        (vec (eval v))
+        :else v))
+
+(defn read-params-string
+  [s]
+  (let [parsed (if (string? s) (read-string s) s)]
+    (into {} (for [[k v] (seq parsed)]
+               [k (if (list? v) (handle-params-fn v) v)]))))
+
 (defn read-params
   [params-string]
   (let [[problem name] (str/split params-string #"/")
@@ -97,9 +110,9 @@
     (when params
       (if (:comparison params)
         (-> params
-           (update-in [:control] read-string)
-           (update-in [:comparison] read-string))
-        (update-in params [:control] read-string)))))
+           (update-in [:control] read-params-string)
+           (update-in [:comparison] read-params-string))
+        (update-in params [:control] read-params-string)))))
 
 (defn vectorize-params
   "Put every value in the input map into a vector."
