@@ -12,9 +12,9 @@
                  [clj-time "0.6.0"]
                  [clojure-csv/clojure-csv "2.0.0-alpha1"]
                  [incanter "1.5.4"]
-                 [cc.artifice/resque-clojure "0.3.0-SNAPSHOT"]]
+                 [cc.artifice/resque-clojure "0.3.0-SNAPSHOT"]
+                 [com.h2database/h2 "1.3.171"]]
   :profiles {:dev {:dependencies
-                   [[com.h2database/h2 "1.3.171"]
-                    [codox "0.6.6"]]}}
+                   [[codox "0.6.6"]]}}
   :codox {:src-dir-uri "http://github.com/artifice-cc/geppetto/blob/master/"
           :src-linenum-anchor-prefix "L"})
