@@ -123,7 +123,7 @@
 
 (defn count-params
   [params]
-  (reduce * (map second (seq (vectorize-params params)))))
+  (reduce * (map (comp count second) (seq (vectorize-params params)))))
 
 (defn explode-params
   "Want {:Xyz [1 2 3], :Abc [3 4]} to become [{:Xyz 1, :Abc 3}, {:Xyz 2, :Abc 4}, ...]"
