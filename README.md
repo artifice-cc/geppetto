@@ -1,5 +1,7 @@
 # geppetto
 
+[![Build Status](https://travis-ci.org/artifice-cc/geppetto.png)](https://travis-ci.org/artifice-cc/geppetto)
+
 A Clojure library designed to ... well, that part is up to you.
 
 ## Usage

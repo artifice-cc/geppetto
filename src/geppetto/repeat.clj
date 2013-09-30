@@ -59,10 +59,11 @@
    {:control {:only [:key1 :key2]} :comparison {:ignore [:key1 :key2]}} etc.
    Only takes priority over ignore. The :params field is always ignored."
   [runid only-ignore run-fn datadir git nthreads]
-  (let [old-results (doall
+  (let [old-run (get-run runid)
+        old-results (doall
                      (extract-relevant-results
                       (sort-by (comp :simulation :control)
-                               (get-raw-results runid))
+                               (get-raw-results (:recorddir old-run)))
                       only-ignore))
         ;; note, new-results will have a :params field (old-results does not),
         ;; and this will be exploited below

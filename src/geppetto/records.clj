@@ -35,14 +35,15 @@
           paired-params (when comparison-params
                           (partition 2 (interleave control-params comparison-params)))
           simcount (* (count control-params) repetitions)
+          working-directory (System/getProperty "user.dir")
           run-meta (merge {:starttime (format-date-ms t)
                            :paramid (:paramid params)
                            :datadir datadir :recorddir recdir :nthreads nthreads
-                           :pwd (:out (sh "pwd")) :repetitions repetitions :seed seed
+                           :pwd working-directory :repetitions repetitions :seed seed
                            :hostname (.getHostName (java.net.InetAddress/getLocalHost))
                            :username (System/getProperty "user.name")
                            :simcount simcount}
-                          (git-meta-info git (:out (sh "pwd"))))]
+                          (git-meta-info git working-directory))]
       (when (and comparison-params (not= (count control-params) (count comparison-params)))
         (println "Control/comparison param counts are not equal.")
         (System/exit -1))
@@ -56,8 +57,8 @@
                                (if comparison-params paired-params control-params)
                                recdir nthreads save-record? repetitions)))
       (cond verifying-claim?
-            (get-raw-results recdir simcount)
-            (and upload? (not= "" "localhost"))
+            (get-raw-results recdir)
+            (and save-record? upload?)
             (do
               (submit-results recdir)
               (System/exit 0))

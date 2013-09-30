@@ -1,50 +1,50 @@
 (ns geppetto.parameters
   (:require [clojure.string :as str])
-  (:use [korma.core])
+  (:use [korma db core])
   (:use [geppetto.models])
   (:use [geppetto.misc]))
 
 (defn get-params
   ([paramid]
-     (first (with-db @geppetto-db
-              (select parameters (where {:paramid paramid})))))
+     (with-db @geppetto-db
+       (first (select parameters (where {:paramid paramid})))))
   ([problem name]
-     (first (with-db @geppetto-db
-              (select parameters
+     (with-db @geppetto-db
+       (first (select parameters
                       (where {:name name :problem problem})
                       (order :rev :DESC) (limit 1))))))
 
 (defn parameters-latest-rev
   [problem name]
-  (or (:rev (first (with-db @geppetto-db
-                     (select parameters
+  (with-db @geppetto-db
+    (or (:rev (first (select parameters
                              (fields :rev)
                              (where {:problem problem :name name})
                              (order :rev :DESC)
-                             (limit 1)))))
-      0))
+                             (limit 1))))
+        0)))
 
 (defn parameters-latest
   [problem name]
-  (first (with-db @geppetto-db
-           (select parameters
+  (with-db @geppetto-db
+    (first (select parameters
                    (where {:problem problem :name name})
                    (order :rev :DESC)
                    (limit 1)))))
 
 (defn parameters-latest?
   [paramid]
-  (let [{:keys [problem name rev]}
-        (first (with-db @geppetto-db
-                 (select parameters (fields :problem :name :rev)
-                         (where {:paramid paramid}))))]
-    (= rev (parameters-latest-rev problem name))))
+  (with-db @geppetto-db
+    (let [{:keys [problem name rev]}
+          (first (select parameters (fields :problem :name :rev)
+                         (where {:paramid paramid})))]
+      (= rev (parameters-latest-rev problem name)))))
 
 ;; an "update" is really an insert with a new revision
 (defn update-parameters
   [params]
-  (:generated_key
-   (with-db @geppetto-db
+  (with-db @geppetto-db
+    (:generated_key
      (insert parameters (values [{:problem (:problem params)
                                   :name (:name params)
                                   :rev (inc (parameters-latest-rev (:problem params)
@@ -60,15 +60,15 @@
 
 (defn list-parameters
   []
-  (let [problem-name-pairs (sort (set (map (fn [{:keys [problem name]}] [problem name])
-                                         (with-db @geppetto-db
-                                           (select parameters (fields :problem :name))))))
-        latest-params (for [[problem name] problem-name-pairs]
-                        (parameters-latest problem name))]
-    (reduce (fn [m ps]
-         (update-in m [(if (:comparison ps) :comparative :non-comparative)] conj ps))
-       {:comparative [] :non-comparative []}
-       latest-params)))
+  (with-db @geppetto-db
+    (let [problem-name-pairs (sort (set (map (fn [{:keys [problem name]}] [problem name])
+                                             (select parameters (fields :problem :name)))))
+          latest-params (for [[problem name] problem-name-pairs]
+                          (parameters-latest problem name))]
+      (reduce (fn [m ps]
+                (update-in m [(if (:comparison ps) :comparative :non-comparative)] conj ps))
+              {:comparative [] :non-comparative []}
+              latest-params))))
 
 (defn runs-with-parameters
   [paramid]
@@ -86,6 +86,19 @@
   [params-string]
   (first (str/split params-string #"/")))
 
+(defn handle-params-fn
+  [v]
+  (cond (and (= 'range (first v))
+             (every? number? (rest v)))
+        (vec (eval v))
+        :else v))
+
+(defn read-params-string
+  [s]
+  (let [parsed (if (string? s) (read-string s) s)]
+    (into {} (for [[k v] (seq parsed)]
+               [k (if (list? v) (handle-params-fn v) v)]))))
+
 (defn read-params
   [params-string]
   (let [[problem name] (str/split params-string #"/")
@@ -97,11 +110,12 @@
     (when params
       (if (:comparison params)
         (-> params
-           (update-in [:control] read-string)
-           (update-in [:comparison] read-string))
-        (update-in params [:control] read-string)))))
+           (update-in [:control] read-params-string)
+           (update-in [:comparison] read-params-string))
+        (update-in params [:control] read-params-string)))))
 
 (defn vectorize-params
+  "Put every value in the input map into a vector."
   [params]
   (reduce (fn [m k] (let [v (k params)]
                       (assoc m k (if (vector? v) v [v]))))

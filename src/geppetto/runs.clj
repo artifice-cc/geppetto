@@ -1,32 +1,30 @@
 (ns geppetto.runs
   (:require [clojure.string :as str])
   (:require [clojure.set :as set])
-  (:use [korma.db :only [transaction]])
-  (:use [korma.core])
+  (:use [korma db core])
   (:use [clojure-csv.core :only [parse-csv]])
-  (:use [clojure.java.io :only [reader]])
+  (:use [clojure.java.io :only [reader file]])
   (:use [geppetto.models])
   (:use [geppetto.misc]))
 
 (defn commit-run
   [run-meta]
   (with-db @geppetto-db
-    (:generated_key (with-db @geppetto-db (insert runs (values [run-meta]))))))
+    (:generated_key (insert runs (values [run-meta])))))
 
 (defn get-run
   [runid]
-  (first
-   (with-db @geppetto-db
-     (select runs
-             (with parameters)
-             (where {:runid runid})
-             (fields :runid :starttime :endtime :username
-                     :seed :nthreads :repetitions :simcount
-                     :pwd :hostname :recorddir :datadir :project
-                     :commit :commitdate :commitmsg :branch
-                     :runs.paramid :parameters.name
-                     :parameters.problem :parameters.description
-                     :parameters.control :parameters.comparison)))))
+  (with-db @geppetto-db
+    (first (select runs
+                   (with parameters)
+                   (where {:runid runid})
+                   (fields :runid :starttime :endtime :username
+                           :seed :nthreads :repetitions :simcount
+                           :pwd :hostname :recorddir :datadir :project
+                           :commit :commitdate :commitmsg :branch
+                           :runs.paramid :parameters.name
+                           :parameters.problem :parameters.description
+                           :parameters.control :parameters.comparison)))))
 
 (defn list-runs
   []
@@ -40,8 +38,8 @@
 
 (defn list-projects
   []
-  (sort (set (filter identity (map :project (with-db @geppetto-db
-                                       (select runs (fields :project))))))))
+  (with-db @geppetto-db
+    (sort (set (filter identity (map :project (select runs (fields :project))))))))
 
 (defn set-project
   [runid project]
@@ -91,9 +89,12 @@
 
 (defn get-raw-results
   "Get results without associating in simid and control-params/comparison-params."
-  [recorddir simcount]
-  (for [simid (range simcount)]
+  [recorddir]
+  (for [simid (map #(Integer/parseInt %)
+                   (filter identity
+                           (map #(second (re-matches #"control-results-(\d+)\.csv" (.getName %)))
+                                (file-seq (file recorddir)))))]
     (into {} (filter identity
-                (for [resultstype [:control :comparison :comparative]]
-                  (when-let [r (get-sim-results recorddir resultstype simid nil)]
-                    [resultstype r]))))))
+                     (for [resultstype [:control :comparison :comparative]]
+                       (when-let [r (get-sim-results recorddir resultstype simid nil)]
+                         [resultstype r]))))))

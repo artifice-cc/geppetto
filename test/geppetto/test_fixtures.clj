@@ -4,9 +4,7 @@
   (:use [geppetto.misc])
   (:use [geppetto.parameters])
   (:use [geppetto.models])
-  (:use [korma.db :only [create-db]])
-  (:use [korma.core])
-  (:use [korma.config]))
+  (:use [korma db core config]))
 
 (defn establish-params
   []
@@ -17,14 +15,13 @@
 
 (defn in-memory-db
   [f]
-  (dosync
-   (alter geppetto-db
-          (constantly {:classname "org.h2.Driver"
-                       :subprotocol "h2"
-                       :subname "mem:test;DB_CLOSE_DELAY=-1"})))
+  (dosync (alter geppetto-db (constantly {:classname "org.h2.Driver"
+                                          :subprotocol "h2"
+                                          :subname "mem:test;DB_CLOSE_DELAY=-1"})))
+  (set-delimiters "")
+  (set-naming {:keys str/lower-case})
   (with-db @geppetto-db
     (exec-raw (slurp "testdb.sql")))
-  (set-delimiters "")
   (establish-params)
   (f))
 
