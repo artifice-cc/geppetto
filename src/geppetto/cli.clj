@@ -40,7 +40,7 @@
 
           (= "run" (:action options))
           (let [problem (extract-problem (:params options))]
-            (run-with-new-record run-fn (:params options) (:datadir props) (:seed options)
+            (run-with-new-record (partial run-fn problem) (:params options) (:datadir props) (:seed options)
                                  (:git props) (:recordsdir props) (:nthreads options)
                                  (:repetitions options) (:upload options) (:save-record options) false))
 
