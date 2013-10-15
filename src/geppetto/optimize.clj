@@ -10,7 +10,8 @@
   (:use [geppetto.local :only [write-results-csv]])
   (:use [geppetto.r :only [results-to-rbin]])
   (:use [geppetto.parameters :only [read-params explode-params vectorize-params]])
-  (:use [geppetto.random]))
+  (:use [geppetto.random])
+  (:use [taoensso.timbre]))
 
 (defn random-neighboring-indices
   [vparams param-indices]
@@ -70,7 +71,7 @@
 ;; simulated annealing
 (defn optimize-loop
   [control-params run-fn recdir opt-type opt-metric
-   alpha initial-temperature temperature-schedule stop-cond1 stop-cond2]
+   alpha initial-temperature temperature-schedule stop-cond1 stop-cond2 save-record?]
   (loop [best-results nil
          all-results []
          kept-results []
@@ -95,11 +96,12 @@
               keep? (or (empty? kept-results)
                         (better-than? opt-type opt-metric control-results (last kept-results) false)
                         (< (rand) prob))]
-          (write-results-csv (format "%s/control-results-%d.csv" recdir (:simulation ps))
-                             control-results)
-          (println "Best?" best? "Keep?" keep? "temperature" temperature
-                   "step" step "solution delta" sol-delta "prob" prob
-                   "Best so far:" opt-metric (get best-results opt-metric))
+          (when save-record?
+            (write-results-csv (format "%s/control-results-%d.csv" recdir (:simulation ps))
+                               control-results))
+          (info "Best?" best? "Keep?" keep? "temperature" temperature
+                "step" step "solution delta" sol-delta "prob" prob
+                "Best so far:" opt-metric (get best-results opt-metric))
           (recur (if best? control-results best-results)
                  (conj all-results control-results)
                  (if keep? (conj kept-results control-results) kept-results)
@@ -131,18 +133,18 @@
                          :username (System/getProperty "user.name")}
                         (git-meta-info git working-directory))
         start-time (.getTime (Date.))]
-    (println (format "Parameter space: %d possible parameters"
-                     (reduce * (map count (vals control-params)))))
+    (info (format "Parameter space: %d possible parameters"
+                  (reduce * (map count (vals control-params)))))
     (when save-record?
-      (println (format "Making new directory %s ..." recdir))
+      (info (format "Making new directory %s ..." recdir))
       (.mkdirs (File. recdir))
       (spit (format "%s/meta.clj" recdir) (pr-str run-meta)))
     (let [[best-results results] (optimize-loop control-params run-fn recdir opt-type opt-metric
                                                 alpha initial-temperature temperature-schedule
-                                                stop-cond1 stop-cond2)
+                                                stop-cond1 stop-cond2 save-record?)
           run-meta-stopped (assoc run-meta :endtime (format-date-ms (. System (currentTimeMillis)))
                                   :simcount (count results))]
       (when save-record? (spit (format "%s/meta.clj" recdir) (pr-str run-meta-stopped)))
       (when (and save-record? upload?)
         (submit-results recdir))
-      (System/exit 0))))
+      best-results)))

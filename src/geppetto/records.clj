@@ -8,16 +8,17 @@
   (:use [geppetto.git :only [git-meta-info]])
   (:use [geppetto.runs :only [commit-run get-raw-results]])
   (:use [geppetto.r :only [results-to-rbin]])
-  (:use [geppetto.parameters :only [read-params explode-params vectorize-params]]))
+  (:use [geppetto.parameters :only [read-params explode-params vectorize-params]])
+  (:use [taoensso.timbre]))
 
 (defn submit-results
   [recdir]
   (let [run-meta (read-string (slurp (format "%s/meta.clj" recdir)))]
-    (println "Writing run metadata to database...")
+    (info "Writing run metadata to database...")
     (commit-run run-meta)
-    (println "Generating R binary data...")
+    (info "Generating R binary data...")
     (results-to-rbin (:recorddir run-meta))
-    (println "Done.")))
+    (info "Done.")))
 
 (defn run-with-new-record
   "Create a new folder for storing run data and execute the run."
@@ -45,13 +46,13 @@
                            :simcount simcount}
                           (git-meta-info git working-directory))]
       (when (and comparison-params (not= (count control-params) (count comparison-params)))
-        (println "Control/comparison param counts are not equal.")
+        (fatal "Control/comparison param counts are not equal.")
         (System/exit -1))
       (when save-record?
-        (println (format "Making new directory %s ..." recdir))
+        (info (format "Making new directory %s ..." recdir))
         (.mkdirs (File. recdir)))
-      (println (format "Running %d parameters * %d repetitions = %d simulations..."
-                  (count control-params) repetitions simcount))
+      (info (format "Running %d parameters * %d repetitions = %d simulations..."
+                    (count control-params) repetitions simcount))
       (binding [*out* (if verifying-claim? (java.io.StringWriter.) *out*)]
         (doall (run-partitions run-fn run-meta (not (nil? comparison-params))
                                (if comparison-params paired-params control-params)

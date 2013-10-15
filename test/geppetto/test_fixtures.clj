@@ -1,10 +1,12 @@
 (ns geppetto.test-fixtures
   (:import [java.net URI])
+  (:use [clojure.java.shell :only [sh]])
   (:require [clojure.string :as str])
   (:use [geppetto.misc])
   (:use [geppetto.parameters])
   (:use [geppetto.models])
-  (:use [korma db core config]))
+  (:use [korma db core config])
+  (:require [taoensso.timbre :as timbre]))
 
 (defn establish-params
   []
@@ -21,7 +23,20 @@
   (set-delimiters "")
   (set-naming {:keys str/lower-case})
   (with-db @geppetto-db
-    (exec-raw (slurp "testdb.sql")))
+    (exec-raw (slurp "tables.sql")))
   (establish-params)
   (f))
 
+(defn travis-mysql-db
+  [f]
+  (sh "mysql" "-u" "travis" "geppetto_test" :in (slurp "tables.sql"))
+  (dosync (alter geppetto-db (constantly (mysql {:db "geppetto_test" :user "travis" :password ""}))))
+  (set-delimiters "")
+  (set-naming {:keys str/lower-case})
+  (establish-params)
+  (f))
+
+(defn quiet-mode
+  [f]
+  (timbre/set-level! :warn)
+  (f))

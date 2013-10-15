@@ -4,7 +4,8 @@
   (:use [clojure.java.io :as io :only [writer file]])
   (:use [clojure-csv.core :only [write-csv]])
   (:use [geppetto.misc])
-  (:use [geppetto.random]))
+  (:use [geppetto.random])
+  (:use [taoensso.timbre]))
 
 (defn format-time
   [seconds]
@@ -15,17 +16,16 @@
 
 (defn print-progress
   [elapsed finished total]
-  (when (not @quiet-mode)
-    (let [remaining (- total finished)
-          avgtime (/ elapsed finished)
-          expected (* remaining avgtime)
-          wallexpected (.toString (Date. (long (+ expected (.getTime (Date.))))))]
-      (println (format "*** Done %d/%d\t Elapsed: %s\t Remaining: %s\t Ending %s"
+  (let [remaining (- total finished)
+        avgtime (/ elapsed finished)
+        expected (* remaining avgtime)
+        wallexpected (.toString (Date. (long (+ expected (.getTime (Date.))))))]
+    (info (format "*** Done %d/%d\t Elapsed: %s\t Remaining: %s\t Ending %s"
                   finished
                   total
                   (format-time (int (/ elapsed 1000.0)))
                   (format-time (int (/ expected 1000.0)))
-                  wallexpected)))))
+                  wallexpected))))
 
 ;; keep track of progress
 (def progress (ref 0))

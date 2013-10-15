@@ -4,7 +4,8 @@
   (:use [geppetto.runs])
   (:use [geppetto.records])
   (:use [geppetto.parameters])
-  (:use [geppetto.random]))
+  (:use [geppetto.random])
+  (:use [taoensso.timbre]))
 
 (defn repeat-run
   "Returns results. Probably should be used by (verify-identical-repeat-run)."
@@ -15,8 +16,8 @@
                          (prn-str (:comparison run)))
         params (read-params params-string)]
     (alter-var-root (var rgen) (constantly (new-seed (:seed run))))
-    (println (format "Repeating run %d with parameters:" runid))
-    (pprint params)
+    (info (format "Repeating run %d with parameters:" runid))
+    (info (with-out-str (pprint params)))
     (run-with-new-record run-fn params-string
       datadir (:seed run) git recordsdir nthreads
       (:repetitions run) false true true)))

@@ -1,1 +1,4 @@
 language: clojure
+services: mysql
+before_script:
+  - mysql -e 'create database geppetto_test;'

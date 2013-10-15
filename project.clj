@@ -13,6 +13,7 @@
                  [clojure-csv/clojure-csv "2.0.0-alpha1"]
                  [incanter "1.5.4"]
                  [cc.artifice/resque-clojure "0.3.0-SNAPSHOT"]
+                 [cc.artifice/timbre "2.6.3"]
                  [com.h2database/h2 "1.3.171"]]
   :profiles {:dev {:dependencies
                    [[codox "0.6.6"]]}}

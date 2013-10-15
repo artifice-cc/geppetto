@@ -5,7 +5,8 @@
   (:use [geppetto.records :only [run-with-new-record]])
   (:use [geppetto.optimize :only [optimize]])
   (:use [geppetto.misc])
-  (:use [propertea.core]))
+  (:use [propertea.core])
+  (:use [taoensso.timbre]))
 
 (defn geppetto-cli [run-fn args]
   (let [[options _ banner]
@@ -36,7 +37,7 @@
     (cond (and (or (= "run" (:action options))
                    (= "optimize" (:action options)))
                (= "" (:params options)))
-          (println "--params identifier required.")
+          (fatal "--params identifier required.")
 
           (= "run" (:action options))
           (let [problem (extract-problem (:params options))]
@@ -52,4 +53,4 @@
                     (:repetitions options) (:upload options) (:save-record options))
 
           :else
-          (println "No action given."))))
+          (fatal "No action given."))))

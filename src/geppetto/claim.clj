@@ -6,7 +6,8 @@
   (:use [geppetto.parameters :only [read-params]])
   (:use [geppetto.records :only [run-with-new-record]])
   (:use [geppetto.stats])
-  (:use [geppetto.random]))
+  (:use [geppetto.random])
+  (:require [taoensso.timbre :as timbre]))
 
 (def results (ref []))
 
@@ -49,7 +50,7 @@
         run-results (binding [rgen (new-seed seed)]
                       (run-with-new-record
                        run-fn (:parameters claim) datadir seed git recordsdir
-                        nthreads repetitions false true true))]
+                       nthreads repetitions false true true))]
     (dosync (alter results (constantly run-results)))
     (let [verifications (apply concat
                                (for [resultstype [:control :comparison :comparative]]
@@ -64,16 +65,16 @@
                                       :verification-result result
                                       :verification-output (str sw)}))))]
       (doseq [ver verifications]
-        (println (format "%s (%s):" (if (:verification-result ver) "PASS" "FAIL")
-                    (name (:resultstype ver))))
-        (pprint (:code ver))
-        (println (:verification-output ver)))
+        (timbre/info (format "%s (%s):" (if (:verification-result ver) "PASS" "FAIL")
+                             (name (:resultstype ver))))
+        (timbre/info (with-out-str (pprint (:code ver))))
+        (timbre/info (:verification-output ver)))
       (if (every? :verification-result verifications)
         (do
-          (println (format "*** Claim \"%s\" verified.\n\n" (:name claim)))
+          (timbre/info (format "*** Claim \"%s\" verified.\n\n" (:name claim)))
           true)
         (do
-          (println (format "!!! Claim \"%s\" not verified.\n\n" (:name claim)))
+          (timbre/info (format "!!! Claim \"%s\" not verified.\n\n" (:name claim)))
           false)))))
 
 
