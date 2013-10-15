@@ -9,7 +9,8 @@
   (:use [geppetto.records :only [submit-results]])
   (:use [geppetto.local :only [write-results-csv]])
   (:use [geppetto.r :only [results-to-rbin]])
-  (:use [geppetto.parameters :only [read-params explode-params vectorize-params]]))
+  (:use [geppetto.parameters :only [read-params explode-params vectorize-params]])
+  (:use [geppetto.random]))
 
 (defn random-neighboring-indices
   [vparams param-indices]
@@ -61,7 +62,6 @@
    temperature-schedule steps."
   (let [recent-keeps (take stop-cond2 (sort-by first (seq keeps-per-temp)))
         keep-counts (map (fn [[t rs]] (count (filter identity rs))) recent-keeps)]
-    (println "stopping condition satisfied?" (count keeps-per-temp) keep-counts)
     ;; do we have enough recent temperatures to warrant this question?
     (and (<= stop-cond2 (count keeps-per-temp))
          ;; all of the last stop-cond2 keep sets need to be defficient to stop
@@ -84,7 +84,7 @@
               (stopping-condition-satisfied? keeps-per-temp temperature-schedule stop-cond1 stop-cond2))
         [best-results all-results]
         (let [ps (assoc (select-params-from-indices control-params ps-indices)
-                   :simulation (dec step))
+                   :simulation (dec step) :Seed (my-rand-int 10000000))
               [control-results _ _] (run-fn false ps)
               sol-delta (when (not-empty kept-results)
                           (solution-delta opt-type opt-metric control-results (last kept-results)))
@@ -99,7 +99,8 @@
                              control-results)
           (prn control-results)
           (println "Best?" best? "Keep?" keep? "temperature" temperature
-                   "step" step "solution delta" sol-delta "prob" prob)
+                   "step" step "solution delta" sol-delta "prob" prob
+                   "Best so far:" opt-metric (get best-results opt-metric))
           (recur (if best? control-results best-results)
                  (conj all-results control-results)
                  (if keep? (conj kept-results control-results) kept-results)
@@ -113,6 +114,7 @@
   [run-fn params-str-or-map opt-type opt-metric
    alpha initial-temperature temperature-schedule stop-cond1 stop-cond2
    datadir seed git recordsdir nthreads repetitions upload? save-record?]
+  (alter-var-root (var rgen) (constantly (new-seed seed)))
   (let [t (. System (currentTimeMillis))
         recdir (.getAbsolutePath (File. (str recordsdir "/" t)))
         ;; TODO: support comparative runs
