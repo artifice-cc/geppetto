@@ -97,7 +97,6 @@
                         (< (rand) prob))]
           (write-results-csv (format "%s/control-results-%d.csv" recdir (:simulation ps))
                              control-results)
-          (prn control-results)
           (println "Best?" best? "Keep?" keep? "temperature" temperature
                    "step" step "solution delta" sol-delta "prob" prob
                    "Best so far:" opt-metric (get best-results opt-metric))
