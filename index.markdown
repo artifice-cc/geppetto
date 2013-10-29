@@ -1,3 +1,8 @@
+---
+title: Geppetto
+layout: default
+---
+
 <div style="width: 400px; float: right; text-align: center; padding: 10px;">
 <img src="geppetto.jpg" align="right"/>
 <a href="http://it.wikipedia.org/wiki/File:Le_avventure_di_Pinocchio-pag020.jpg">Image source</a>
@@ -5,7 +10,7 @@
 
 # Geppetto
 
-abstract
+A framework for running experiments.
 
 ## Benefits
 
@@ -19,6 +24,6 @@ abstract
 
 - A large parameter space can be explored efficiently using simulated annealing combinatorial optimization algorithm; results are collected with other experimental results and can be analyzed in the same fashion.
 
-```
-xyz
-```
+## Download
+
+Grab the code at [https://github.com/artifice-cc/geppetto](https://github.com/artifice-cc/geppetto)

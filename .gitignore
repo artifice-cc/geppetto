@@ -9,3 +9,5 @@ pom.xml
 .lein-failures
 .lein-plugins
 test/records
+_site
+Gemfile*
