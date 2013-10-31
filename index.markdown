@@ -11,7 +11,7 @@ layout: default
 <h1>Geppetto</h1>
 
 <p class="lead">
-A framework for experiments.
+Experimental support for engineering intelligent systems.
 </p>
 
 The Geppetto framework is a software library, a web-based user
