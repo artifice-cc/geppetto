@@ -2,7 +2,7 @@
 
 [![Build Status](https://travis-ci.org/artifice-cc/geppetto.png)](https://travis-ci.org/artifice-cc/geppetto)
 
-A framework for experiments.
+Experimental support for engineering intelligent systems.
 
 ## Usage examples
 
