@@ -4,12 +4,14 @@
   (:use [geppetto.fn]))
 
 (defn try-all
-  [g default-params metric repetitions]
+  [g args default-params metric repetitions]
   (let [ps (params-to-try g)
-        f (graph/eager-compile g)]
-    (into {} (for [params ps]
+        f (graph/eager-compile g)
+        uniq-params (set (for [params ps] (merge params default-params)))]
+    (into {} (for [params uniq-params]
                (let [results (for [_ (range repetitions)]
-                               (get (f (merge params default-params)) metric))]
+                               (get (f (assoc args :params params))
+                                    metric))]
                  [params (stats/mean results)])))))
 
 (defn- calc-group-effect
