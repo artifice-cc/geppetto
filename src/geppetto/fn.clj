@@ -12,7 +12,7 @@
   [f param]
   (get-in (meta f) [:params param]))
 
-(defn all-params
+(defn all-fn-params
   [f-or-g]
   (if (map? f-or-g)
     (into {} (mapcat (fn [k] (for [param (fn-params (get f-or-g k))]
@@ -21,9 +21,15 @@
     (into {} (map (fn [k] [k (fn-param-range f-or-g k)])
                   (fn-params f-or-g)))))
 
-(defn params-to-try
+(defn random-fn-params
   [f-or-g]
-  (let [params (all-params f-or-g)]
+  (let [params (all-fn-params f-or-g)]
+    (into {} (for [k (keys params)]
+               [k (rand-nth (get params k))]))))
+
+(defn all-fn-params-combinations
+  [f-or-g]
+  (let [params (all-fn-params f-or-g)]
     (explode-params params)))
 
 (defmacro paramfnk
@@ -51,4 +57,4 @@
 (defn compile-graph
   [compiler g]
   (let [f (compiler g)]
-    (with-meta f (assoc (meta f) :params (all-params g)))))
+    (with-meta f (assoc (meta f) :params (all-fn-params g)))))

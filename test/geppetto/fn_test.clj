@@ -26,25 +26,25 @@
     (is (= [1 2 3] (fn-param-range f3 :a)))
     (is (= [4 5 6] (fn-param-range f3 :b)))))
 
-(deftest test-all-params
+(deftest test-all-fn-params
   (let [g1 (paramfnk [x y] [a [1 2] b [3 4]] (* x y a b))
         g2 {:x (paramfnk [y] [a [1 2]] (+ y a))
             :z (paramfnk [x y] [b [3 4]] (+ x y b))}
         f1 (compile-graph graph/eager-compile g1)
         f2 (compile-graph graph/eager-compile g2)]
-    (is (= {:a [1 2] :b [3 4]} (all-params g1)))
+    (is (= {:a [1 2] :b [3 4]} (all-fn-params g1)))
     (is (= [{:a 1 :b 3} {:a 1 :b 4}
             {:a 2 :b 3} {:a 2 :b 4}]
-           (params-to-try g1)))
-    (is (= {:a [1 2] :b [3 4]} (all-params f1)))
+           (all-fn-params-combinations g1)))
+    (is (= {:a [1 2] :b [3 4]} (all-fn-params f1)))
     (is (= [{:a 1 :b 3} {:a 1 :b 4}
             {:a 2 :b 3} {:a 2 :b 4}]
-           (params-to-try f1)))
-    (is (= {:a [1 2] :b [3 4]} (all-params g2)))
+           (all-fn-params-combinations f1)))
+    (is (= {:a [1 2] :b [3 4]} (all-fn-params g2)))
     (is (= [{:a 1 :b 3} {:a 1 :b 4}
             {:a 2 :b 3} {:a 2 :b 4}]
-           (params-to-try g2)))
-    (is (= {:a [1 2] :b [3 4]} (all-params f2)))
+           (all-fn-params-combinations g2)))
+    (is (= {:a [1 2] :b [3 4]} (all-fn-params f2)))
     (is (= [{:a 1 :b 3} {:a 1 :b 4}
             {:a 2 :b 3} {:a 2 :b 4}]
-           (params-to-try f2)))))
+           (all-fn-params-combinations f2)))))
