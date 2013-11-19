@@ -60,7 +60,7 @@
 (defn my-label-fn
   [g k]
   (if-let [params (fn-params (get g k))]
-    (format "%s\n%s" (name k) (vec params))
+    (format "%s\n%s" (name k) (str/join "\n" (map str params)))
     (name k)))
 
 (defn graphviz-el [g file-stem edge-list]
