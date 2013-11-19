@@ -5,7 +5,7 @@
 
 (defn try-all
   [g args default-params metric repetitions]
-  (let [ps (params-to-try g)
+  (let [ps (all-fn-params-combinations g)
         f (graph/eager-compile g)
         uniq-params (set (for [params ps] (merge params default-params)))]
     (into {} (for [params uniq-params]
@@ -32,7 +32,7 @@
 
 (defn calc-effect
   [g filename metric repetitions]
-  (let [params (all-params g)
+  (let [params (all-fn-params g)
         results (try-all g filename metric repetitions)
         sample-size (count results)
         param-stats (into {} (for [param (keys params)
