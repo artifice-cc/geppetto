@@ -28,8 +28,8 @@
                                               (* n (Math/pow (- m overall-mean) 2.0)))
                                             val-stats))
                              (dec grouped-count))
-        f-stat (if (= 0 within-group-var) Double/NaN
-                   (/ between-group-var within-group-var))]
+        f-stat (try (/ between-group-var within-group-var)
+                    (catch Exception _ Double/NaN))]
     {:f-stat f-stat :means (into {} (map (fn [{:keys [val m]}] [val m]) val-stats))}))
 
 (defn transform-results
