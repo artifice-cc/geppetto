@@ -46,8 +46,8 @@
      (let [t-results (if (map? results) results (transform-results results))
            param-keys (set (keys (first (keys t-results))))
            metrics (set/difference (set (keys (first (vals t-results)))) param-keys)]
-       (prn metrics)
-       (into {} (for [metric metrics]
+       (into {} (for [metric metrics
+                      :when (every? #(number? (get % metric)) (vals t-results))]
                   [metric (calc-effect t-results metric)]))))
   ([results metric]
      (let [t-results (if (map? results) results (transform-results results))
