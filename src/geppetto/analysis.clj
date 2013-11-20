@@ -1,4 +1,5 @@
 (ns geppetto.analysis
+  (:require [clojure.string :as str])
   (:require [clojure.set :as set])
   (:require [incanter.stats :as stats])
   (:require [plumbing.graph :as graph])
@@ -20,7 +21,7 @@
   (let [val-stats (for [[val ps] grouped-results]
                     (let [rs (map #(get results %) ps)
                           m (stats/mean rs)]
-                      {:val val :n (count rs) :m m
+                      {:val val :n (count rs) :m m :results rs
                        :ss (reduce + (map (fn [r] (Math/pow (- r m) 2.0)) rs))}))
         within-group-var (/ (reduce + (map :ss val-stats)) (- sample-size grouped-count))
         overall-mean (stats/mean (vals results))
@@ -30,7 +31,9 @@
                              (dec grouped-count))
         f-stat (try (/ between-group-var within-group-var)
                     (catch Exception _ Double/NaN))]
-    {:f-stat f-stat :means (into {} (map (fn [{:keys [val m]}] [val m]) val-stats))}))
+    {:f-stat f-stat :p-value (- 1.0 (stats/cdf-f f-stat :df1 (dec grouped-count)
+                                                 :df2 (- sample-size grouped-count)))
+     :means (into {} (map (fn [{:keys [val m]}] [val m]) val-stats))}))
 
 (defn transform-results
   "Go from [{:result 10 :params \"{:simulation 0 :Seed 123 :Foo 3 :Bar 7}\" ...}]
