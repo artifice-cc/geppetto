@@ -122,7 +122,7 @@ CREATE TABLE `runs` (
   `datadir` varchar(1024) NOT NULL,
   `starttime` datetime NOT NULL,
   `endtime` datetime NOT NULL,
-  `hostname` varchar(45) NOT NULL,
+  `hostname` varchar(1024) NOT NULL,
   `nthreads` int(11) NOT NULL,
   `pwd` varchar(1024) NOT NULL,
   `recorddir` varchar(1024) NOT NULL,
