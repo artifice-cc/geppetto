@@ -31,12 +31,22 @@
                    (/ between-group-var within-group-var))]
     {:f-stat f-stat :means (into {} (map (fn [{:keys [val m]}] [val m]) val-stats))}))
 
+(defn transform-results
+  "Go from [{:result 10 :params \"{:simulation 0 :Seed 123 :Foo 3 :Bar 7}\" ...}]
+   to {{:Foo 3 :Bar 7} 10 ...}"
+  [results metric]
+  ;; TODO: FIX for comparative runs (:control-params, :comparative-params)
+  (into {} (for [rs results]
+             (let [params (dissoc (read-string (:params rs)) :simulation :Seed)]
+               [params (get rs metric)]))))
+
 (defn calc-effect
-  [results]
-  (let [params (first (keys results))
-        sample-size (count results)]
+  [results metric]
+  (let [t-results (transform-results results metric)
+        params (first (keys t-results))
+        sample-size (count t-results)]
     (into {} (for [param (keys params)
-                   :let [grouped-results (group-by #(get % param) (keys results))
+                   :let [grouped-results (group-by #(get % param) (keys t-results))
                          grouped-count (count grouped-results)]
                    :when (not= 1 grouped-count)]
-               [param (calc-group-effect results sample-size grouped-results grouped-count)]))))
+               [param (calc-group-effect t-results sample-size grouped-results grouped-count)]))))

@@ -5,6 +5,7 @@
   (:use [geppetto.misc])
   (:use [geppetto.parameters])
   (:use [geppetto.models])
+  (:use [geppetto.random])
   (:use [korma db core config])
   (:require [taoensso.timbre :as timbre]))
 
@@ -34,6 +35,11 @@
   (set-delimiters "")
   (set-naming {:keys str/lower-case})
   (establish-params)
+  (f))
+
+(defn setup-random-seed
+  [f]
+  (alter-var-root (var rgen) (constantly (new-seed 0)))
   (f))
 
 (defn quiet-mode

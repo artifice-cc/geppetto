@@ -15,10 +15,12 @@
   [recdir]
   (let [run-meta (read-string (slurp (format "%s/meta.clj" recdir)))]
     (info "Writing run metadata to database...")
-    (commit-run run-meta)
-    (info "Generating R binary data...")
-    (results-to-rbin (:recorddir run-meta))
-    (info "Done.")))
+    (let [runid (commit-run run-meta)]
+      (info (format "Done. Run %d recorded." runid))
+      (info "Generating R binary data...")
+      (results-to-rbin (:recorddir run-meta))
+      (info "Done.")
+      runid)))
 
 (defn run-with-new-record
   "Create a new folder for storing run data and execute the run."
@@ -60,8 +62,5 @@
       (cond verifying-claim?
             (get-raw-results recdir)
             (and save-record? upload?)
-            (do
-              (submit-results recdir)
-              (System/exit 0))
-            :else
-            (System/exit 0)))))
+            (submit-results recdir)
+            :else nil))))

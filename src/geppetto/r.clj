@@ -18,8 +18,10 @@
 
 (defn results-to-rbin
   [recdir]
-  (let [rcode (results-to-rbin-rcode recdir)
-        rscript-fname (format "%s/results-to-rbin.rscript" recdir)]
-    (with-open [writer (io/writer rscript-fname)]
-      (.write writer rcode))
-    (sh "/usr/bin/Rscript" rscript-fname)))
+  (try
+    (let [rcode (results-to-rbin-rcode recdir)
+          rscript-fname (format "%s/results-to-rbin.rscript" recdir)]
+      (with-open [writer (io/writer rscript-fname)]
+        (.write writer rcode))
+      (sh "/usr/bin/Rscript" rscript-fname))
+    (catch Exception e (println "Error running Rscript:" e))))
