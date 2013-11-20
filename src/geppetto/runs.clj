@@ -82,7 +82,9 @@
   [runid resultstype selected-fields]
   (let [run (get-run runid)
         recorddir (:recorddir run)
-        fields (set/union (set selected-fields) #{:params :control-params :comparison-params})]
+        fields (if selected-fields
+                 (set/union (set selected-fields)
+                            #{:params :control-params :comparison-params}))]
     (filter identity
        (for [simid (range (:simcount run))]
          (get-sim-results recorddir resultstype simid fields)))))
