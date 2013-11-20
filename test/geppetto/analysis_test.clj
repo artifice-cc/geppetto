@@ -36,7 +36,8 @@
             :prod)))))
 
 (def run-fn (fn [comparative? params]
-              [{:result (* (:Foo params) (:Bar params))}]))
+              [{:early-result (+ (:Foo params) (:Bar params))
+                :result (* (:Foo params) (:Bar params))}]))
 
 (deftest test-calc-effect-run
   (new-parameters {:problem "Testing"
@@ -45,9 +46,18 @@
                    :description "testing params"})
   (let [runid (run-with-new-record
                run-fn "Testing/test-runs" "data" 0 "git" "test/records" 1 1 true true false)
-        results (get-results runid :control [:result])]
+        results (get-results runid :control [:early-result :result])]
     (is (= (calc-effect results :result)
            {:Bar {:f-stat 1.3445378151260503
                   :means {7 23.333333333333332, 11 36.666666666666664}}
             :Foo {:f-stat 3.730263157894737
-                  :means {2 18.0, 3 27.0, 5 45.0}}}))))
+                  :means {2 18.0, 3 27.0, 5 45.0}}}))
+    (is (= (calc-effect results)
+           {:early-result {:Bar {:f-stat 10.285714285714285,
+                                 :means {7 10.333333333333334, 11 14.333333333333334}},
+                           :Foo {:f-stat 0.5833333333333334,
+                                 :means {2 11.0, 3 12.0, 5 14.0}}},
+            :result {:Bar {:f-stat 1.3445378151260503,
+                           :means {7 23.333333333333332, 11 36.666666666666664}},
+                     :Foo {:f-stat 3.730263157894737,
+                           :means {2 18.0, 3 27.0, 5 45.0}}}}))))

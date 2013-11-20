@@ -1,4 +1,5 @@
 (ns geppetto.analysis
+  (:require [clojure.set :as set])
   (:require [incanter.stats :as stats])
   (:require [plumbing.graph :as graph])
   (:use [geppetto.fn]))
@@ -33,20 +34,29 @@
 
 (defn transform-results
   "Go from [{:result 10 :params \"{:simulation 0 :Seed 123 :Foo 3 :Bar 7}\" ...}]
-   to {{:Foo 3 :Bar 7} 10 ...}"
-  [results metric]
+   to {{:Foo 3 :Bar 7} {:result 10 ...} ...}"
+  [results]
   ;; TODO: FIX for comparative runs (:control-params, :comparative-params)
   (into {} (for [rs results]
              (let [params (dissoc (read-string (:params rs)) :simulation :Seed)]
-               [params (get rs metric)]))))
+               [params (dissoc rs :params :simulation :Seed)]))))
 
 (defn calc-effect
-  [results metric]
-  (let [t-results (transform-results results metric)
-        params (first (keys t-results))
-        sample-size (count t-results)]
-    (into {} (for [param (keys params)
-                   :let [grouped-results (group-by #(get % param) (keys t-results))
-                         grouped-count (count grouped-results)]
-                   :when (not= 1 grouped-count)]
-               [param (calc-group-effect t-results sample-size grouped-results grouped-count)]))))
+  ([results]
+     (let [t-results (if (map? results) results (transform-results results))
+           param-keys (set (keys (first (keys t-results))))
+           metrics (set/difference (set (keys (first (vals t-results)))) param-keys)]
+       (prn metrics)
+       (into {} (for [metric metrics]
+                  [metric (calc-effect t-results metric)]))))
+  ([results metric]
+     (let [t-results (if (map? results) results (transform-results results))
+           params (first (keys t-results))
+           ;; extract just the metric for each param-key
+           m-results (into {} (for [[params rs] t-results] [params (get rs metric)]))
+           sample-size (count m-results)]
+       (into {} (for [param (keys params)
+                      :let [grouped-results (group-by #(get % param) (keys m-results))
+                            grouped-count (count grouped-results)]
+                      :when (not= 1 grouped-count)]
+                  [param (calc-group-effect m-results sample-size grouped-results grouped-count)])))))
