@@ -31,14 +31,11 @@
     {:f-stat f-stat :means (into {} (map (fn [{:keys [val m]}] [val m]) val-stats))}))
 
 (defn calc-effect
-  [g filename metric repetitions]
-  (let [params (all-fn-params g)
-        results (try-all g filename metric repetitions)
-        sample-size (count results)
-        param-stats (into {} (for [param (keys params)
-                                   :let [grouped-results (group-by #(get % param) (keys results))
-                                         grouped-count (count grouped-results)]
-                                   :when (not= 1 grouped-count)]
-                               [param (calc-group-effect results sample-size
-                                                         grouped-results grouped-count)]))]
-    param-stats))
+  [results]
+  (let [params (first (keys results))
+        sample-size (count results)]
+    (into {} (for [param (keys params)
+                   :let [grouped-results (group-by #(get % param) (keys results))
+                         grouped-count (count grouped-results)]
+                   :when (not= 1 grouped-count)]
+               [param (calc-group-effect results sample-size grouped-results grouped-count)]))))
