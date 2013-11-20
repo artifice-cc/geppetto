@@ -27,7 +27,8 @@
                                               (* n (Math/pow (- m overall-mean) 2.0)))
                                             val-stats))
                              (dec grouped-count))
-        f-stat (/ between-group-var within-group-var)]
+        f-stat (if (= 0 within-group-var) Double/NaN
+                   (/ between-group-var within-group-var))]
     {:f-stat f-stat :means (into {} (map (fn [{:keys [val m]}] [val m]) val-stats))}))
 
 (defn calc-effect
