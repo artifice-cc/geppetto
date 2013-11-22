@@ -1,4 +1,5 @@
 (ns geppetto.fn
+  (:require [clojure.walk :as walk])
   (:require [plumbing.core])
   (:require [schema.macros :as macros])
   (:require [plumbing.fnk.impl :as fnk-impl])
@@ -14,12 +15,14 @@
 
 (defn all-fn-params
   [f-or-g]
-  (if (map? f-or-g)
-    (into {} (mapcat (fn [k] (for [param (fn-params (get f-or-g k))]
-                               [param (fn-param-range (get f-or-g k) param)]))
-                     (keys f-or-g)))
-    (into {} (map (fn [k] [k (fn-param-range f-or-g k)])
-                  (fn-params f-or-g)))))
+  (cond (map? f-or-g)
+        (into {} (mapcat (fn [k] (for [param (fn-params (get f-or-g k))]
+                                   [param (fn-param-range (get f-or-g k) param)]))
+                         (keys f-or-g)))
+        (fn? f-or-g)
+        (into {} (map (fn [k] [k (fn-param-range f-or-g k)])
+                      (fn-params f-or-g)))
+        :else (do (prn f-or-g "here") {})))
 
 (defn random-fn-params
   [f-or-g]
@@ -58,3 +61,17 @@
   [compiler g]
   (let [f (compiler g)]
     (with-meta f (assoc (meta f) :params (all-fn-params g)))))
+
+(defmacro fn-with-params
+  [bind & body]
+  (let [symbols (atom #{})
+        excluded (set (conj bind 'params))
+        param-extractor (fn [form]
+                          (if (and (symbol? form) (not (excluded form)))
+                            (swap! symbols conj form))
+                          form)]
+    (walk/postwalk param-extractor body)
+    (let [syms @symbols
+          new-bind [{:keys (vec (conj bind 'params))}]]
+      `(with-meta (fn ~new-bind ~@body)
+         {:params (reduce merge (map (fn [~'sym] (geppetto.fn/all-fn-params ~'sym)) ~syms))}))))
