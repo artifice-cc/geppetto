@@ -23,7 +23,7 @@
         (fn? f-or-g)
         (into {} (map (fn [k] [k (fn-param-range f-or-g k)])
                       (fn-params f-or-g)))
-        :else (do (prn f-or-g "here") {})))
+        :else {}))
 
 (defn random-fn-params
   [f-or-g]
