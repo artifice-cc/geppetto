@@ -5,6 +5,7 @@
             :url "http://opensource.org/licenses/MIT"}
   :dependencies [[org.clojure/clojure "1.5.1"]
                  [org.clojure/tools.cli "0.2.2"]
+                 [org.clojure/tools.macro "0.1.2"]
                  [propertea "1.2.3"]
                  [korma "0.3.0-RC5"]
                  [mysql/mysql-connector-java "5.1.6"]

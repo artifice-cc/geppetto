@@ -1,5 +1,6 @@
 (ns geppetto.fn
   (:require [clojure.walk :as walk])
+  (:require [clojure.tools.macro :as macro])
   (:require [plumbing.core])
   (:require [schema.macros :as macros])
   (:require [plumbing.fnk.impl :as fnk-impl])
@@ -67,10 +68,12 @@
   (let [symbols (atom #{})
         excluded (set (conj bind 'params))
         param-extractor (fn [form]
-                          (if (and (symbol? form) (not (excluded form)))
+                          (if (and (symbol? form) (not (excluded form))
+                                   (not (special-symbol? form))
+                                   (or (resolve form) (get &env form)))
                             (swap! symbols conj form))
                           form)]
-    (walk/postwalk param-extractor body)
+    (walk/postwalk param-extractor (macro/mexpand-all body))
     (let [syms @symbols
           new-bind [{:keys (vec (conj bind 'params))}]]
       `(with-meta (fn ~new-bind ~@body)

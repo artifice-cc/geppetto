@@ -55,10 +55,10 @@
             :z (paramfnk [x y] [b [3 4]] (+ x y b))}
         f1 (compile-graph graph/eager-compile g1)
         f2 (compile-graph graph/eager-compile g2)
-        f (fn-with-params [x y]
-            (+ (f1 {:x x :y y :params params})
-               (:z (f2 {:x x :y y :params params}))))]
-    (is (= (+ (* 5 2 2 8) (+ (+ 2 2) 2 3))
+        f (fn-with-params [x y] (let [foo 1]
+                                  (+ (f1 {:x x :y foo :params params})
+                                     (:z (f2 {:x x :y y :params params})))))]
+    (is (= (+ (* 5 1 2 8) (+ (+ 2 2) 2 3))
            (f {:x 5 :y 2 :params {:a 2 :b 3 :c 8}})))
     (is (= {:a [1 2], :b [3 4] :c [3 4]}
            (all-fn-params f)))))
