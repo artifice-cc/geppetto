@@ -18,11 +18,11 @@
 
 (defn- calc-group-effect
   [results sample-size grouped-results grouped-count]
-  (let [val-stats (for [[val ps] grouped-results]
-                    (let [rs (map #(get results %) ps)
-                          m (stats/mean rs)]
-                      {:val val :n (count rs) :m m :results rs
-                       :ss (reduce + (map (fn [r] (Math/pow (- r m) 2.0)) rs))}))
+  (let [val-stats (set (for [[val ps] grouped-results]
+                         (let [rs (vec (map #(get results %) ps))
+                               m (stats/mean rs)]
+                           {:val val :n (count rs) :m m :results rs
+                            :ss (reduce + (map (fn [r] (Math/pow (- r m) 2.0)) rs))})))
         within-group-var (/ (reduce + (map :ss val-stats)) (- sample-size grouped-count))
         overall-mean (stats/mean (vals results))
         between-group-var (/ (reduce + (map (fn [{:keys [n m]}]
@@ -30,10 +30,14 @@
                                             val-stats))
                              (dec grouped-count))
         f-stat (try (/ between-group-var within-group-var)
-                    (catch Exception _ Double/NaN))]
-    {:f-stat f-stat :p-value (- 1.0 (stats/cdf-f f-stat :df1 (dec grouped-count)
-                                                 :df2 (- sample-size grouped-count)))
-     :means (into {} (map (fn [{:keys [val m]}] [val m]) val-stats))}))
+                    (catch Exception _ nil))
+        df1 (dec grouped-count)
+        df2 (- sample-size grouped-count)]
+    {:f-stat f-stat :p-value (if f-stat (- 1.0 (stats/cdf-f f-stat :df1 df1 :df2 df2)))
+     :means (into {} (map (fn [{:keys [val m]}] [val m]) val-stats))
+     :overall-mean overall-mean :val-stats val-stats
+     :sample-size sample-size :df1 df1 :df2 df2
+     :within-group-var within-group-var :between-group-var between-group-var}))
 
 (defn transform-results
   "Go from [{:result 10 :params \"{:simulation 0 :Seed 123 :Foo 3 :Bar 7}\" ...}]
