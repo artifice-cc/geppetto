@@ -29,8 +29,8 @@
                                               (* n (Math/pow (- m overall-mean) 2.0)))
                                             val-stats))
                              (dec grouped-count))
-        f-stat (try (/ between-group-var within-group-var)
-                    (catch Exception _ nil))
+        f-stat (if (> within-group-var 1.0E-15)
+                 (/ between-group-var within-group-var))
         df1 (dec grouped-count)
         df2 (- sample-size grouped-count)]
     {:f-stat f-stat :p-value (if f-stat (- 1.0 (stats/cdf-f f-stat :df1 df1 :df2 df2)))
