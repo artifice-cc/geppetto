@@ -46,11 +46,13 @@
                                  (:repetitions options) (:upload options) (:save-record options) false))
 
           (= "optimize" (:action options))
-          (optimize run-fn (:params options) (:opt-min-or-max options) (:opt-metric options)
-                    (:opt-alpha options) (:opt-init-temp options) (:opt-temp-sched options)
-                    (:opt-stop-cond1 options) (:opt-stop-cond2 options)
-                    (:datadir props) (:seed options) (:git props) (:recordsdir props) (:nthreads options)
-                    (:repetitions options) (:upload options) (:save-record options))
+          (let [problem (extract-problem (:params options))]
+            (optimize (partial run-fn problem)
+                      (:params options) (:opt-min-or-max options) (:opt-metric options)
+                      (:opt-alpha options) (:opt-init-temp options) (:opt-temp-sched options)
+                      (:opt-stop-cond1 options) (:opt-stop-cond2 options)
+                      (:datadir props) (:seed options) (:git props) (:recordsdir props) (:nthreads options)
+                      (:repetitions options) (:upload options) (:save-record options)))
 
           :else
           (fatal "No action given."))))
