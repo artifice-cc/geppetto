@@ -7,7 +7,7 @@
   (:use [geppetto.git :only [git-meta-info]])
   (:use [geppetto.runs :only [commit-run get-raw-results]])
   (:use [geppetto.records :only [submit-results]])
-  (:use [geppetto.local :only [write-results-csv]])
+  (:use [geppetto.local :only [inject-params write-results-csv]])
   (:use [geppetto.r :only [results-to-rbin]])
   (:use [geppetto.parameters :only [read-params explode-params vectorize-params]])
   (:use [geppetto.random])
@@ -73,6 +73,7 @@
   [control-params run-fn recdir opt-type opt-metric
    alpha initial-temperature temperature-schedule stop-cond1 stop-cond2 save-record?]
   (loop [best-results nil
+         best-params {}
          all-results []
          kept-results []
          keeps-per-temp {} ;; keyed by temp, vals: if keeping results, then results, else nil
@@ -83,7 +84,7 @@
     (let [ps-indices (choose-param-indices control-params last-param-indices attempted-param-indices)]
       (if (or (nil? ps-indices)
               (stopping-condition-satisfied? keeps-per-temp temperature-schedule stop-cond1 stop-cond2))
-        [best-results all-results]
+        [best-results best-params all-results]
         (let [ps (assoc (select-params-from-indices control-params ps-indices)
                    :simulation (dec step) :Seed (my-rand-int 10000000))
               [control-results _ _] (run-fn ps)
@@ -95,14 +96,18 @@
                         (better-than? opt-type opt-metric control-results best-results true))
               keep? (or (empty? kept-results)
                         (better-than? opt-type opt-metric control-results (last kept-results) false)
-                        (< (rand) prob))]
+                        (< (rand) prob))
+              new-best-results (if best? control-results best-results)
+              new-best-params (if best? ps best-params)]
           (when save-record?
             (write-results-csv (format "%s/control-results-%d.csv" recdir (:simulation ps))
-                               control-results))
+                               (map #(inject-params % ps) control-results)))
           (info "Best?" best? "Keep?" keep? "temperature" temperature
                 "step" step "solution delta" sol-delta "prob" prob
-                "Best so far:" opt-metric (get best-results opt-metric))
-          (recur (if best? control-results best-results)
+                "Best so far:" opt-metric (get new-best-results opt-metric)
+                "Best params so far:" new-best-params)
+          (recur new-best-results
+                 new-best-params
                  (conj all-results control-results)
                  (if keep? (conj kept-results control-results) kept-results)
                  (update-in keeps-per-temp [temperature] conj (if keep? control-results nil))
@@ -139,12 +144,13 @@
       (info (format "Making new directory %s ..." recdir))
       (.mkdirs (File. recdir))
       (spit (format "%s/meta.clj" recdir) (pr-str run-meta)))
-    (let [[best-results results] (optimize-loop control-params run-fn recdir opt-type opt-metric
-                                                alpha initial-temperature temperature-schedule
-                                                stop-cond1 stop-cond2 save-record?)
+    (let [[best-results best-params results]
+          (optimize-loop control-params run-fn recdir opt-type opt-metric
+                         alpha initial-temperature temperature-schedule
+                         stop-cond1 stop-cond2 save-record?)
           run-meta-stopped (assoc run-meta :endtime (format-date-ms (. System (currentTimeMillis)))
                                   :simcount (count results))]
       (when save-record? (spit (format "%s/meta.clj" recdir) (pr-str run-meta-stopped)))
       (when (and save-record? upload?)
         (submit-results recdir))
-      best-results)))
+      [best-results best-params])))
