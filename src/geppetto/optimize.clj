@@ -101,7 +101,7 @@
               new-best-params (if best? ps best-params)]
           (when save-record?
             (write-results-csv (format "%s/control-results-%d.csv" recdir (:simulation ps))
-                               (map #(inject-params % ps) control-results)))
+                               (inject-params control-results ps)))
           (info "Best?" best? "Keep?" keep? "temperature" temperature
                 "step" step "solution delta" sol-delta "prob" prob
                 "Best so far:" opt-metric (get new-best-results opt-metric)
