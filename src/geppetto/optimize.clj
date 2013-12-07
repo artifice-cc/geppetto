@@ -15,7 +15,7 @@
 
 (defn random-neighboring-indices
   [vparams param-indices]
-  (let [chosen-key (rand-nth (filter (fn [k] (second (get vparams k))) (keys vparams)))
+  (let [chosen-key (rand-nth (filter (fn [k] (< 1 (count (get vparams k)))) (keys vparams)))
         chosen-count (count (get vparams chosen-key))
         current-index (get param-indices chosen-key)
         chosen-index (if (< (rand) 0.1)
