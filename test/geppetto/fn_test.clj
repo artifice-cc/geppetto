@@ -24,7 +24,8 @@
     (is (= [4 5 6] (fn-param-range f2 :b)))
     (is (= [:a :b] (fn-params f3)))
     (is (= [1 2 3] (fn-param-range f3 :a)))
-    (is (= [4 5 6] (fn-param-range f3 :b)))))
+    (is (= [4 5 6] (fn-param-range f3 :b)))
+    (is (= '[x y] (:bindings (meta g1))))))
 
 (deftest test-all-fn-params
   (let [g1 (paramfnk [x y] [a [1 2] b [3 4]] (* x y a b))
@@ -61,4 +62,5 @@
     (is (= (+ (* 5 1 2 8) (+ (+ 2 2) 2 3))
            (f {:x 5 :y 2 :params {:a 2 :b 3 :c 8}})))
     (is (= {:a [1 2], :b [3 4] :c [3 4]}
-           (all-fn-params f)))))
+           (all-fn-params f)))
+    (is (= '[x y] (:bindings (meta f))))))
