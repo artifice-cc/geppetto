@@ -4,7 +4,7 @@
   (:use [geppetto.fn]))
 
 (deftest test-fn-params
-  (let [g1 (paramfnk [x y] [a [1 2 3] b [4 5 6]] (* x y a b))
+  (let [g1 (paramfnk [x y] [a [1 2 3] b (range 4 7)] (* x y a b))
         g2 {:result (paramfnk [x y] [a [1 2 3] b [4 5 6]] (* x y a b))}
         g3 {:result g1}
         f1 (compile-graph graph/eager-compile g1)
@@ -19,6 +19,7 @@
     (is (= [:a :b] (fn-params f1)))
     (is (= [1 2 3] (fn-param-range f1 :a)))
     (is (= [4 5 6] (fn-param-range f1 :b)))
+    (is (vector? (fn-param-range f1 :b)))
     (is (= [:a :b] (fn-params f2)))
     (is (= [1 2 3] (fn-param-range f2 :a)))
     (is (= [4 5 6] (fn-param-range f2 :b)))

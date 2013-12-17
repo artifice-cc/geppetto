@@ -47,7 +47,7 @@
                                        [nil args])
         params-vals (partition 2 params)
         params-meta (into {} (for [[param vals] params-vals]
-                               [(keyword param) vals]))]
+                               [(keyword param) `(vec ~vals)]))]
     (assert (vector? params))
     (assert (even? (count params)))
     (assert (apply distinct? (concat bind (keys params-meta))))
