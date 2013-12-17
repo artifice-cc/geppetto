@@ -56,7 +56,8 @@
                                                           (keys params-meta))
                                            [:as 'params])))
           f (plumbing.fnk.impl/fnk-form name? new-bind body)]
-      `(with-meta ~f (merge (meta ~f) {:params ~params-meta})))))
+      `(with-meta ~f (merge (meta ~f) {:params ~params-meta
+                                       :bind ~new-bind})))))
 
 (defn compile-graph
   [compiler g]
@@ -77,4 +78,5 @@
     (let [syms @symbols
           new-bind [{:keys (vec (conj bind 'params))}]]
       `(with-meta (fn ~new-bind ~@body)
-         {:params (reduce merge (map (fn [~'sym] (geppetto.fn/all-fn-params ~'sym)) ~syms))}))))
+         {:bind ~new-bind
+          :params (reduce merge (map (fn [~'sym] (geppetto.fn/all-fn-params ~'sym)) ~syms))}))))
