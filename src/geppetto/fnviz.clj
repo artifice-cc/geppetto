@@ -4,6 +4,7 @@
 
 (ns geppetto.fnviz
   (:require [clojure.java.shell :as shell]
+            [clojure.java.io :as io]
             [clojure.string :as str])
   (:import (java.util HashSet) (java.io File))
   (:use [plumbing.core])
@@ -41,9 +42,9 @@
                                         visited indexer))))))))
 
 
-(defn write-graphviz [file-stem g roots node-key-fn node-label-fn edge-child-pair-fn] 
-  (let [dot-file (str file-stem ".dot")
-        png-file (str file-stem ".png")
+(defn write-graphviz [folder file-stem g roots node-key-fn node-label-fn edge-child-pair-fn] 
+  (let [dot-file (format "%s/%s.dot" folder file-stem)
+        png-file (format "%s/%s.png" folder file-stem)
         indexer (memoize (fn [x] (double-quote (gensym))))
         vis (HashSet.)]
     (spit dot-file
@@ -53,7 +54,7 @@
                                                         edge-child-pair-fn vis indexer)))
                "}\n"))
     (shell/sh "dot" "-Tpng" "-o" png-file dot-file)
-    png-file))
+    (format "%s.png" file-stem)))
 
 (defn my-node-key-fn [g k] k)
 
@@ -63,11 +64,11 @@
     (format "%s\n%s" (name k) (str/join "\n" (map str params)))
     (name k)))
 
-(defn graphviz-el [g file-stem edge-list]
+(defn graphviz-el [g folder file-stem edge-list]
   (when (not-empty edge-list)
     (let [edge-map (map-vals #(map second %) (group-by first edge-list))]
       (write-graphviz
-       file-stem g
+       folder file-stem g
        (set (apply concat edge-list))
        my-node-key-fn my-label-fn #(for [e (get edge-map %)] [nil e])))))
 
@@ -79,7 +80,8 @@
     [parent k]))
 
 (defn graphviz-graph
-  "Generate file-stem.dot and file-stem.png representing the nodes and edges of Graph g"
-  [file-stem g]
-  (graphviz-el g file-stem (graph-edges g)))
-
+  "Generate folder/file-stem.dot and folder/file-stem.png representing
+  the nodes and edges of Graph g"
+  [folder file-stem g]
+  (.mkdirs (io/file folder))
+  (graphviz-el g folder file-stem (graph-edges g)))
