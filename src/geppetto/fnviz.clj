@@ -43,7 +43,7 @@
 
 (defn write-graphviz [file-stem g roots node-key-fn node-label-fn edge-child-pair-fn] 
   (let [dot-file (str file-stem ".dot")
-        pdf-file (str file-stem ".pdf")
+        png-file (str file-stem ".png")
         indexer (memoize (fn [x] (double-quote (gensym))))
         vis (HashSet.)]
     (spit dot-file
@@ -52,8 +52,8 @@
                (apply str (for [root roots] (walk-graph g root node-key-fn node-label-fn
                                                         edge-child-pair-fn vis indexer)))
                "}\n"))
-    (shell/sh "dot" "-Tpdf" "-o" pdf-file dot-file)
-    pdf-file))
+    (shell/sh "dot" "-Tpng" "-o" png-file dot-file)
+    png-file))
 
 (defn my-node-key-fn [g k] k)
 
@@ -64,22 +64,22 @@
     (name k)))
 
 (defn graphviz-el [g file-stem edge-list]
-  (let [edge-map (map-vals #(map second %) (group-by first edge-list))]
-    (write-graphviz
-     file-stem g
-     (set (apply concat edge-list))
-     my-node-key-fn my-label-fn #(for [e (get edge-map %)] [nil e]))))
+  (when (not-empty edge-list)
+    (let [edge-map (map-vals #(map second %) (group-by first edge-list))]
+      (write-graphviz
+       file-stem g
+       (set (apply concat edge-list))
+       my-node-key-fn my-label-fn #(for [e (get edge-map %)] [nil e])))))
 
 (defn graph-edges [g]
   (for [[k node] g
+        :when (and (fn? node) (try (input-schema node) (catch RuntimeException _)))
         parent (keys (input-schema node))
         :when (nil? (get-in (meta node) [:params parent]))]
     [parent k]))
 
 (defn graphviz-graph
-  "Generate file-stem.dot and file-stem.pdf representing the nodes and edges of Graph g"
+  "Generate file-stem.dot and file-stem.png representing the nodes and edges of Graph g"
   [file-stem g]
   (graphviz-el g file-stem (graph-edges g)))
 
-;; (graphviz-graph "/tmp/foobar" {:x (fnk [a]) :y (fnk [a x])})
-;; then check /tmp/foobar.pdf
