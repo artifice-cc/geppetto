@@ -14,7 +14,7 @@
         params-string (format "{:control %s :comparison %s}"
                          (prn-str (:control run))
                          (prn-str (:comparison run)))
-        params (read-params params-string)]
+        params (read-params-string params-string)]
     (alter-var-root (var rgen) (constantly (new-seed (:seed run))))
     (info (format "Repeating run %d with parameters:" runid))
     (info (with-out-str (pprint params)))
