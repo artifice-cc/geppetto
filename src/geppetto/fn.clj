@@ -58,29 +58,29 @@
     (let [new-bind (conj bind (vec (concat [:params] (map (comp symbol name)
                                                           (keys params-meta))
                                            [:as 'params])))
-          f (fnk-impl/fnk-form name? new-bind body)]
+          f (plumbing.fnk.impl/fnk-form name? new-bind body)]
       `(with-meta ~f (merge (meta ~f) {:params ~params-meta :bindings '~bind})))))
 
 (defn fnkc-form
   [fn-name bind body]
-  (let [{:keys [map-sym body-form input-schema]} (fnk-impl/letk-input-schema-and-body-form
+  (let [{:keys [map-sym body-form input-schema]} (plumbing.fnk.impl/letk-input-schema-and-body-form
                                                   bind [] `(do ~@body))
         schema [input-schema (or (:output-schema (meta bind))
-                                 (schema/guess-expr-output-schema (last body)))]]
+                                 (plumbing.fnk.schema/guess-expr-output-schema (last body)))]]
     (pfnk/fn->fnk
      `(fn ~fn-name
         [~map-sym]
         (let [cache-key# {:fn-name (keyword '~fn-name) :args (dissoc ~map-sym :cache)}]
-          (schema/assert-iae (= (class (:cache ~map-sym)) clojure.lang.Atom)
-                             ":cache key in input map is not an atom.")
-          (schema/assert-iae ((supers (class @(:cache ~map-sym))) clojure.core.cache.CacheProtocol)
-                             ":cache key in input map is not a clojure.core.cache object.")
-          (schema/assert-iae (map? ~map-sym) "fnk called on non-map: %s" ~map-sym)
-          (if (cache/has? @(:cache ~map-sym) cache-key#)
-            (swap! (:cache ~map-sym) cache/hit cache-key#)
-            (swap! (:cache ~map-sym) cache/miss cache-key#
+          (plumbing.fnk.schema/assert-iae (= (class (:cache ~map-sym)) clojure.lang.Atom)
+                                          ":cache key in input map is not an atom.")
+          (plumbing.fnk.schema/assert-iae ((supers (class @(:cache ~map-sym))) clojure.core.cache.CacheProtocol)
+                                          ":cache key in input map is not a clojure.core.cache object.")
+          (plumbing.fnk.schema/assert-iae (map? ~map-sym) "fnk called on non-map: %s" ~map-sym)
+          (if (clojure.core.cache/has? @(:cache ~map-sym) cache-key#)
+            (swap! (:cache ~map-sym) clojure.core.cache/hit cache-key#)
+            (swap! (:cache ~map-sym) clojure.core.cache/miss cache-key#
                    ~body-form))
-          (cache/lookup @(:cache ~map-sym) cache-key#)))
+          (clojure.core.cache/lookup @(:cache ~map-sym) cache-key#)))
      schema)))
 
 (defmacro fnkc
