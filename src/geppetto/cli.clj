@@ -6,6 +6,7 @@
   (:use [geppetto.optimize :only [optimize]])
   (:use [geppetto.runs :only [get-run]])
   (:use [geppetto.repeat :only [verify-identical-repeat-run]])
+  (:use [clojure.pprint :only [pprint]])
   (:use [geppetto.misc])
   (:use [propertea.core])
   (:use [taoensso.timbre]))
