@@ -58,7 +58,7 @@
                       (:repetitions options) (:upload options) (:save-record options)))
 
           (= (:action options) "verify-identical")
-          (let [problem (choose-problem (:problem (get-run (:runid options))))
+          (let [problem (:problem (get-run (:runid options)))
                 only-ignore {:control {:ignore [:Milliseconds]}
                              :comparison {:ignore [:Milliseconds]}
                              :comparative {:ignore [:Milliseconds]}}]
