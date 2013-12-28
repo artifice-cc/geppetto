@@ -14,7 +14,7 @@
         params-string (format "{:control %s :comparison %s}"
                          (prn-str (:control run))
                          (prn-str (:comparison run)))
-        params (read-params-string params-string)]
+        params (read-params params-string)]
     (alter-var-root (var rgen) (constantly (new-seed (:seed run))))
     (info (format "Repeating run %d with parameters:" runid))
     (info (with-out-str (pprint params)))
@@ -46,10 +46,10 @@
 (defn results-diff
   [old-sim new-sim]
   (into {} (for [resultstype [:control :comparison :comparative]]
-             (let [old-rs (get old-sim resultstype)
+             (let [old-rs (dissoc (get old-sim resultstype) :params)
                    new-rs (dissoc (get new-sim resultstype) :params)
                    key-val-pairs (map (fn [k] [k (get old-rs k) (get new-rs k)])
-                                    (sort (set (concat (keys old-rs) (keys new-rs)))))
+                                      (sort (set (concat (keys old-rs) (keys new-rs)))))
                    diffs (for [[k old-val new-val] key-val-pairs
                                :when (value-diff? old-val new-val)]
                            [k old-val new-val])]
@@ -74,8 +74,8 @@
                                (repeat-run runid run-fn datadir git "/tmp" nthreads))
                       only-ignore))]
     (filter (fn [{{:keys [control comparison comparative]} :diffs}]
-         (or (not-empty control) (not-empty comparison) (not-empty comparative)))
-       (for [[old-sim new-sim] (partition 2 (interleave old-results new-results))]
-         {:params {:control (:params (:control new-sim))
-                   :comparison (:params (:comparison new-sim))}
-          :diffs (results-diff old-sim new-sim)}))))
+              (or (not-empty control) (not-empty comparison) (not-empty comparative)))
+            (for [[old-sim new-sim] (partition 2 (interleave old-results new-results))]
+              {:params {:control (:params (:control new-sim))
+                        :comparison (:params (:comparison new-sim))}
+               :diffs (results-diff old-sim new-sim)}))))

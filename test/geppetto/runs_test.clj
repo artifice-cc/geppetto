@@ -2,6 +2,7 @@
   (:use [clojure.test])
   (:use [geppetto.runs])
   (:use [geppetto.records])
+  (:use [geppetto.repeat :only [verify-identical-repeat-run]])
   (:use [geppetto.parameters])
   (:use [geppetto.test-fixtures]))
 
@@ -10,7 +11,7 @@
 (def run-fn (fn [comparative? params]
               [{:result (* (:Foo params) (:Bar params))}]))
 
-(deftest test-read-results
+(deftest test-read-and-repeat-results
   (new-parameters {:problem "Testing"
                    :name "test-runs"
                    :control (pr-str {:Foo [2 3 5] :Bar [7 11]})
@@ -32,4 +33,8 @@
                      {:result 22 :Foo 2 :params "{:simulation 3, :Seed 7309677, :Bar 11, :Foo 2}"}
                      {:result 33 :Foo 3 :params "{:simulation 4, :Seed 7309677, :Bar 11, :Foo 3}"}
                      {:result 35 :Foo 5 :params "{:simulation 2, :Seed 7309677, :Bar 7, :Foo 5}"}
-                     {:result 55 :Foo 5 :params "{:simulation 5, :Seed 7309677, :Bar 11, :Foo 5}"}])))))
+                     {:result 55 :Foo 5 :params "{:simulation 5, :Seed 7309677, :Bar 11, :Foo 5}"}])))
+    (is (empty? (verify-identical-repeat-run runid {:control {:ignore [:Milliseconds]}
+                                                    :comparison {:ignore [:Milliseconds]}
+                                                    :comparative {:ignore [:Milliseconds]}}
+                                             run-fn "data" "git" 1)))))
