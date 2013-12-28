@@ -59,7 +59,8 @@
                                                           (keys params-meta))
                                            [:as 'params])))
           f (plumbing.fnk.impl/fnk-form name? new-bind body)]
-      `(with-meta ~f (merge (meta ~f) {:params ~params-meta :bindings '~bind})))))
+      `(let [func# ~f]
+         (with-meta func# (merge (meta func#) {:params ~params-meta :bindings '~bind}))))))
 
 (defn fnkc-form
   [fn-name bind body]
@@ -106,7 +107,8 @@
                                            [:as 'params]))
                          'cache)
           f (fnkc-form fn-name new-bind body)]
-      `(with-meta ~f (merge (meta ~f) {:params ~params-meta :bindings '~bind})))))
+      `(let [func# ~f]
+         (with-meta func# (merge (meta func#) {:params ~params-meta :bindings '~bind}))))))
 
 (defn compile-graph
   [compiler g]
