@@ -3,7 +3,10 @@
   (:require [clojure.tools.macro :as macro])
   (:require [plumbing.core])
   (:require [schema.macros :as macros])
+  (:require [plumbing.fnk.schema :as schema])
   (:require [plumbing.fnk.impl :as fnk-impl])
+  (:require [plumbing.fnk.pfnk :as pfnk])
+  (:require [clojure.core.cache :as cache])
   (:use [geppetto.parameters]))
 
 (defn fn-params
@@ -55,9 +58,55 @@
     (let [new-bind (conj bind (vec (concat [:params] (map (comp symbol name)
                                                           (keys params-meta))
                                            [:as 'params])))
-          f (plumbing.fnk.impl/fnk-form name? new-bind body)]
-      `(with-meta ~f (merge (meta ~f) {:params ~params-meta
-                                       :bindings '~bind})))))
+          f (fnk-impl/fnk-form name? new-bind body)]
+      `(with-meta ~f (merge (meta ~f) {:params ~params-meta :bindings '~bind})))))
+
+(defn fnkc-form
+  [fn-name bind body]
+  (let [{:keys [map-sym body-form input-schema]} (fnk-impl/letk-input-schema-and-body-form
+                                                  bind [] `(do ~@body))
+        schema [input-schema (or (:output-schema (meta bind))
+                                 (schema/guess-expr-output-schema (last body)))]]
+    (pfnk/fn->fnk
+     `(fn ~fn-name
+        [~map-sym]
+        (let [cache-key# {:fn-name (keyword '~fn-name) :args (dissoc ~map-sym :cache)}]
+          (schema/assert-iae (= (class (:cache ~map-sym)) clojure.lang.Atom)
+                             ":cache key in input map is not an atom.")
+          (schema/assert-iae ((supers (class @(:cache ~map-sym))) clojure.core.cache.CacheProtocol)
+                             ":cache key in input map is not a clojure.core.cache object.")
+          (schema/assert-iae (map? ~map-sym) "fnk called on non-map: %s" ~map-sym)
+          (if (cache/has? @(:cache ~map-sym) cache-key#)
+            (swap! (:cache ~map-sym) cache/hit cache-key#)
+            (swap! (:cache ~map-sym) cache/miss cache-key#
+                   ~body-form))
+          (cache/lookup @(:cache ~map-sym) cache-key#)))
+     schema)))
+
+(defmacro fnkc
+  [& args]
+  (assert (symbol? (first args)))
+  (let [[fn-name [bind & body]] [(first args) (next args)]
+        new-bind (conj bind 'cache)]
+    (fnkc-form fn-name new-bind body)))
+
+(defmacro paramfnkc
+  [& args]
+  (assert (symbol? (first args)))
+  (let [[fn-name [bind params & body]] (macros/extract-arrow-schematized-element &env args)
+        params-vals (partition 2 params)
+        params-meta (into {} (for [[param vals] params-vals]
+                               [(keyword param) `(vec ~vals)]))]
+    (assert (vector? params))
+    (assert (even? (count params)))
+    (assert (apply distinct? (concat bind (keys params-meta))))
+    (assert (every? coll? (map second params-vals)))
+    (let [new-bind (conj bind (vec (concat [:params] (map (comp symbol name)
+                                                          (keys params-meta))
+                                           [:as 'params]))
+                         'cache)
+          f (fnkc-form fn-name new-bind body)]
+      `(with-meta ~f (merge (meta ~f) {:params ~params-meta :bindings '~bind})))))
 
 (defn compile-graph
   [compiler g]

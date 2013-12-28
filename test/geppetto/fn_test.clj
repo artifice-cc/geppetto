@@ -1,6 +1,7 @@
 (ns geppetto.fn-test
   (:use [clojure.test])
   (:require [plumbing.graph :as graph])
+  (:require [clojure.core.cache :as cache])
   (:use [geppetto.fn]))
 
 (deftest test-fn-params
@@ -65,3 +66,30 @@
     (is (= {:a [1 2], :b [3 4] :c [3 4]}
            (all-fn-params f)))
     (is (= '[x y] (:bindings (meta f))))))
+
+(deftest test-fnkc
+  (let [f1 (fnkc f1 [x y] (+ x y))
+        c (atom (cache/lru-cache-factory {}))]
+    (is (= (f1 {:x 1 :y 2 :cache c}) 3))
+    (is (= @c {{:fn-name :f1 :args {:x 1 :y 2}} 3}))))
+
+(deftest test-fnkc-2
+  (let [g1 {:foo (fnkc foo [x y] (+ x y))
+            :baz (fnkc baz [x y] (/ x y))
+            :bar (fnkc bar [foo z] (* foo z))}
+        f1 (compile-graph graph/eager-compile g1)
+        c (atom (cache/lru-cache-factory {}))]
+    (let [result (f1 {:x 1 :y 2 :z 3 :cache c})]
+      (prn result)
+      (is (= (* (+ 1 2) 3) (:bar result)))
+      (is (= (/ 1 2) (:baz result))))
+    (is (= @c {{:fn-name :foo :args {:y 2 :x 1}} 3
+               {:fn-name :baz :args {:y 2 :x 1}} (/ 1 2)
+               {:fn-name :bar :args {:foo 3 :z 3}} 9}))))
+
+(deftest test-paramfnkc
+  (let [f1 (paramfnkc f1 [x y] [foo [11 12] bar [13 14]] (+ x y foo bar))
+        c (atom (cache/lru-cache-factory {}))]
+    (is (= (f1 {:x 1 :y 2 :cache c :params {:foo 11 :bar 13}})
+           (+ 1 2 11 13)))
+    (is (= @c {{:fn-name :f1 :args {:x 1 :y 2 :params {:foo 11 :bar 13}}} (+ 1 2 11 13)}))))
