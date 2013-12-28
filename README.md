@@ -6,6 +6,12 @@ Experimental support for engineering intelligent systems.
 
 ## Usage examples
 
+### Verify identical runs
+
+```
+lein run --action verify-identical --runid 123
+```
+
 ### Claims
 
 ```clojure

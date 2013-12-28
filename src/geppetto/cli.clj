@@ -4,6 +4,8 @@
   (:use [geppetto.random])
   (:use [geppetto.records :only [run-with-new-record]])
   (:use [geppetto.optimize :only [optimize]])
+  (:use [geppetto.runs :only [get-run]])
+  (:use [geppetto.repeat :only [verify-identical-repeat-run]])
   (:use [geppetto.misc])
   (:use [propertea.core])
   (:use [taoensso.timbre]))
@@ -11,11 +13,12 @@
 (defn geppetto-cli [run-fn args]
   (let [[options _ banner]
         (cli args
-             ["--action" "Action (run/optimize)" :default "run"]
+             ["--action" "Action (run/optimize/verify-identical)" :default "run"]
              ["--params" "Parameters identifier (e.g. \"Prob/foo\")" :default ""]
              ["--nthreads" "Number of threads" :default 1 :parse-fn #(Integer. %)]
              ["--repetitions" "Number of repetitions" :default 10 :parse-fn #(Integer. %)]
              ["--seed" "Seed" :default 0 :parse-fn #(Integer. %)]
+             ["--runid" "Run ID for repeating" :default "" :parse-fn #(Integer. %)]
              ["--upload" "Upload?" :default true :parse-fn #(= "true" %)]
              ["--save-record" "Save in record directory?" :default true :parse-fn #(= "true" %)]
              ["--quiet" "Quiet mode (hide progress messages)?" :default false :parse-fn #(= "true" %)]
@@ -53,6 +56,15 @@
                       (:opt-stop-cond1 options) (:opt-stop-cond2 options)
                       (:datadir props) (:seed options) (:git props) (:recordsdir props) (:nthreads options)
                       (:repetitions options) (:upload options) (:save-record options)))
+
+          (= (:action options) "verify-identical")
+          (let [problem (choose-problem (:problem (get-run (:runid options))))
+                only-ignore {:control {:ignore [:Milliseconds]}
+                             :comparison {:ignore [:Milliseconds]}
+                             :comparative {:ignore [:Milliseconds]}}]
+            (pprint (verify-identical-repeat-run
+                     (:runid options) only-ignore (partial run-fn problem)
+                     (:datadir props) (:git props) (:nthreads options))))
 
           :else
           (fatal "No action given."))))
