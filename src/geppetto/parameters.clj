@@ -101,7 +101,8 @@
 
 (defn read-params
   [params-string]
-  (let [[problem name] (str/split params-string #"/")
+  (let [[problem name] (if (not (re-find #"[{}]" params-string))
+                         (str/split params-string #"/"))
         ;; params-string may be a clojure structure (as a string),
         ;; so if fetching the Problem/Params format did not work,
         ;; try to read it as clojure code
