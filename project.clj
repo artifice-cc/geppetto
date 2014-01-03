@@ -7,6 +7,7 @@
                  [org.clojure/tools.cli "0.2.2"]
                  [org.clojure/tools.macro "0.1.2"]
                  [org.clojure/core.cache "0.6.3"]
+                 [myguidingstar/clansi "1.3.0"]
                  [propertea "1.2.3"]
                  [korma "0.3.0-RC5"]
                  [mysql/mysql-connector-java "5.1.6"]

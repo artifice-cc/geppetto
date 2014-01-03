@@ -5,7 +5,8 @@
   (:use [clojure-csv.core :only [write-csv]])
   (:use [geppetto.misc])
   (:use [geppetto.random])
-  (:use [taoensso.timbre]))
+  (:use [taoensso.timbre])
+  (:require [clansi.core :as clansi]))
 
 (defn format-time
   [seconds]
@@ -20,12 +21,14 @@
         avgtime (/ elapsed finished)
         expected (* remaining avgtime)
         wallexpected (.toString (Date. (long (+ expected (.getTime (Date.))))))]
-    (info (format "*** Done %d/%d\t Elapsed: %s\t Remaining: %s\t Ending %s"
-                  finished
-                  total
-                  (format-time (int (/ elapsed 1000.0)))
-                  (format-time (int (/ expected 1000.0)))
-                  wallexpected))))
+    (println (clansi/style
+              (format "*** Done %d/%d\t Elapsed: %s\t Remaining: %s\t Ending %s\n"
+                      finished
+                      total
+                      (format-time (int (/ elapsed 1000.0)))
+                      (format-time (int (/ expected 1000.0)))
+                      wallexpected)
+              :bright :blue))))
 
 ;; keep track of progress
 (def progress (ref 0))
