@@ -1,10 +1,11 @@
 (ns geppetto.cli
+  (:require [clojure.string :as str])
   (:use [clojure.tools.cli])
   (:use [geppetto.parameters :only [read-params extract-problem]])
   (:use [geppetto.random])
   (:use [geppetto.records :only [run-with-new-record]])
   (:use [geppetto.optimize :only [optimize]])
-  (:use [geppetto.runs :only [get-run]])
+  (:use [geppetto.runs :only [get-run find-abandoned-runs]])
   (:use [geppetto.repeat :only [verify-identical-repeat-run]])
   (:use [clojure.pprint :only [pprint]])
   (:use [geppetto.misc])
@@ -14,7 +15,7 @@
 (defn geppetto-cli [run-fn args]
   (let [[options _ banner]
         (cli args
-             ["--action" "Action (run/optimize/verify-identical)" :default "run"]
+             ["--action" "Action (run/optimize/verify-identical/list-abandoned)" :default "run"]
              ["--params" "Parameters identifier (e.g. \"Prob/foo\")" :default ""]
              ["--nthreads" "Number of threads" :default 1 :parse-fn #(Integer. %)]
              ["--repetitions" "Number of repetitions" :default 10 :parse-fn #(Integer. %)]
@@ -66,6 +67,9 @@
             (pprint (verify-identical-repeat-run
                      (:runid options) only-ignore (partial run-fn problem)
                      (:datadir props) (:git props) (:nthreads options))))
+
+          (= (:action options) "list-abandoned")
+          (println (str/join "\n" (sort (find-abandoned-runs (:recordsdir props)))))
 
           :else
           (fatal "No action given."))))

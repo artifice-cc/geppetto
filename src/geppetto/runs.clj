@@ -100,3 +100,9 @@
                      (for [resultstype [:control :comparison :comparative]]
                        (when-let [r (get-sim-results recorddir resultstype simid nil)]
                          [resultstype r]))))))
+
+(defn find-abandoned-runs
+  [recorddir]
+  (let [existing-record-folders (map #(.getName %) (.listFiles (file recorddir)))
+        existing-run-folders (set (map #(second (re-find #".*[\\/](\d+)$" (:recorddir %))) (list-runs)))]
+    (filter #(not (existing-run-folders %)) existing-record-folders)))
