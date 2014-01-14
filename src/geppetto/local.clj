@@ -35,13 +35,14 @@
 
 (defn write-results-csv
   [filename results]
-  (let [new-file? (not (. (io/file filename) exists))
-        row (map (fn [field] (get results field))
-               (sort (keys results)))]
-    (with-open [writer (io/writer filename :append true)]
-      (when new-file?
-        (.write writer (write-csv [(map name (sort (keys results)))])))
-      (.write writer (write-csv [(map str row)])))))
+  (dosync
+   (let [new-file? (not (. (io/file filename) exists))
+         row (map (fn [field] (get results field))
+                  (sort (keys results)))]
+     (with-open [writer (io/writer filename :append true)]
+       (when new-file?
+         (.write writer (write-csv [(map name (sort (keys results)))])))
+       (.write writer (write-csv [(map str row)]))))))
 
 (defn inject-params
   [result control-params]
