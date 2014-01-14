@@ -33,16 +33,19 @@
 ;; keep track of progress
 (def progress (ref 0))
 
+(def filelocks {:control (Object.) :comparison (Object.) :comparative (Object.)})
+
 (defn write-results-csv
-  [filename results]
-  (dosync
-   (let [new-file? (not (. (io/file filename) exists))
-         row (map (fn [field] (get results field))
-                  (sort (keys results)))]
-     (with-open [writer (io/writer filename :append true)]
-       (when new-file?
-         (.write writer (write-csv [(map name (sort (keys results)))])))
-       (.write writer (write-csv [(map str row)]))))))
+  [resultstype recdir results]
+  (locking (get filelocks resultstype)
+    (let [filename (format "%s/%s-results.csv" recdir (name resultstype))
+          new-file? (not (. (io/file filename) exists))
+          row (map (fn [field] (get results field))
+                   (sort (keys results)))]
+      (with-open [writer (io/writer filename :append true)]
+        (when new-file?
+          (.write writer (write-csv [(map name (sort (keys results)))])))
+        (.write writer (write-csv [(map str row)]))))))
 
 (defn inject-params
   [result control-params]
@@ -88,11 +91,11 @@
               comparative-results2 (inject-comparative-params comparative-results (first ps))]
           (when save-record?
             (doseq [rs control-results2]
-              (write-results-csv (format "%s/control-results.csv" recdir) rs))
+              (write-results-csv :control recdir rs))
             (doseq [rs comparison-results2]
-              (write-results-csv (format "%s/comparison-results.csv" recdir) rs))
+              (write-results-csv :comparison recdir rs))
             (doseq [rs comparative-results2]
-              (write-results-csv (format "%s/comparative-results.csv" recdir) rs)))
+              (write-results-csv :comparative recdir rs)))
           (dosync
            (alter progress inc))
           (recur (rest ps)))
@@ -100,7 +103,7 @@
                                    (run-fn comparative? (first ps)))]
           (when save-record?
             (doseq [rs control-results]
-              (write-results-csv (format "%s/control-results.csv" recdir) rs)))
+              (write-results-csv :control recdir rs)))
           (dosync (alter progress inc))
           (recur (rest ps)))))))
 
