@@ -8,9 +8,9 @@
   (str/join "\n\n"
             (for [resultstype ["control" "comparison" "comparative"]]
               (format "%s <- data.frame()
-                  if(file.exists(\"%s-results.csv\")) { %s <- read.csv(\"%s-results.csv\") }
+                  if(file.exists(\"%s/%s-results.csv\")) { %s <- read.csv(\"%s/%s-results.csv\") }
                   save(%s, file=\"%s/%s.rbin\", compress=TRUE)"
-                 resultstype resultstype resultstype resultstype resultstype recdir resultstype))))
+                 resultstype recdir resultstype resultstype recdir resultstype resultstype recdir resultstype))))
 
 (defn results-to-rbin
   [recdir]
