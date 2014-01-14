@@ -50,7 +50,7 @@
 
 (defn calc-effect
   ([results]
-     (let [t-results (if (map? results) results (transform-results results))
+     (let [t-results (if (map? results) results (transform-results (sort-by :simulation results)))
            param-keys (set (keys (first (keys t-results))))
            metrics (set/difference (set (keys (first (vals t-results)))) param-keys)]
        (into {} (for [metric metrics

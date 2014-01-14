@@ -87,17 +87,11 @@
               comparative-results2 (inject-comparative-params comparative-results (first ps))]
           (when save-record?
             (doseq [rs control-results2]
-              (write-results-csv (format "%s/control-results-%d.csv"
-                                         recdir (:simulation (ffirst ps)))
-                                 rs))
+              (write-results-csv (format "%s/control-results.csv" recdir) rs))
             (doseq [rs comparison-results2]
-              (write-results-csv (format "%s/comparison-results-%d.csv"
-                                         recdir (:simulation (ffirst ps)))
-                                 rs))
+              (write-results-csv (format "%s/comparison-results.csv" recdir) rs))
             (doseq [rs comparative-results2]
-              (write-results-csv (format "%s/comparative-results-%d.csv"
-                                         recdir (:simulation (ffirst ps)))
-                                 rs)))
+              (write-results-csv (format "%s/comparative-results.csv" recdir) rs)))
           (dosync
            (alter progress inc))
           (recur (rest ps)))
@@ -105,8 +99,7 @@
                                    (run-fn comparative? (first ps)))]
           (when save-record?
             (doseq [rs control-results]
-              (write-results-csv (format "%s/control-results-%d.csv"
-                                         recdir (:simulation (first ps))) rs)))
+              (write-results-csv (format "%s/control-results.csv" recdir) rs)))
           (dosync (alter progress inc))
           (recur (rest ps)))))))
 

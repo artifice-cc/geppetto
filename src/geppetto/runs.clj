@@ -49,7 +49,7 @@
 (defn gather-results-fields
   [runid resultstype]
   (let [recorddir (:recorddir (get-run runid))
-        csv-file (format "%s/%s-results-0.csv" recorddir (name resultstype))
+        csv-file (format "%s/%s-results.csv" recorddir (name resultstype))
         first-line (try (first (with-open [rdr (reader csv-file)] (line-seq rdr)))
                         (catch Exception e))]
     (if first-line
@@ -68,38 +68,29 @@
                      line)]
          (apply hash-map (interleave headers data)))))))
 
-(defn get-sim-results
-  [recorddir resultstype simid selected-fields]
-  (let [csv-file (format "%s/%s-results-%d.csv" recorddir (name resultstype) simid)
-        data (try (last (read-csv (str/split (slurp csv-file) #"\n")))
-                  (catch Exception e))]
-    (when data
-      (if selected-fields
-        (select-keys data selected-fields)
-        data))))
+(defn get-results-from-recorddir
+  [recorddir resultstype selected-fields]
+  (let [fields (if selected-fields
+                 (set/union (set selected-fields)
+                            #{:params :control-params :comparison-params}))
+        csv-file (format "%s/%s-results.csv" recorddir (name resultstype))]
+    (try (let [results (read-csv (str/split (slurp csv-file) #"\n"))]
+           (if fields (map (fn [row] (select-keys row fields)) results)
+               results))
+         (catch Exception e (println e)))))
 
 (defn get-results
   [runid resultstype selected-fields]
   (let [run (get-run runid)
-        recorddir (:recorddir run)
-        fields (if selected-fields
-                 (set/union (set selected-fields)
-                            #{:params :control-params :comparison-params}))]
-    (filter identity
-       (for [simid (range (:simcount run))]
-         (get-sim-results recorddir resultstype simid fields)))))
+        recorddir (:recorddir run)]
+    (get-results-from-recorddir recorddir resultstype selected-fields)))
 
 (defn get-raw-results
   "Get results without associating in simid and control-params/comparison-params."
   [recorddir]
-  (for [simid (map #(Integer/parseInt %)
-                   (filter identity
-                           (map #(second (re-matches #"control-results-(\d+)\.csv" (.getName %)))
-                                (file-seq (file recorddir)))))]
-    (into {} (filter identity
-                     (for [resultstype [:control :comparison :comparative]]
-                       (when-let [r (get-sim-results recorddir resultstype simid nil)]
-                         [resultstype r]))))))
+  (into {} (for [resultstype [:control :comparison :comparative]]
+             (when-let [r (get-results-from-recorddir recorddir resultstype nil)]
+               [resultstype r]))))
 
 (defn find-abandoned-runs
   [recorddir]
