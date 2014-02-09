@@ -87,7 +87,7 @@
         [best-results best-params all-results]
         (let [ps (assoc (select-params-from-indices control-params ps-indices)
                    :simulation (dec step) :Seed (my-rand-int 10000000))
-              [control-results _ _] (run-fn ps)
+              [control-results _ _] (run-fn false ps)
               sol-delta (when (not-empty kept-results)
                           (solution-delta opt-type opt-metric control-results (last kept-results)))
               prob (when sol-delta
