@@ -44,7 +44,7 @@
 (defn update-parameters
   [params]
   (with-db @geppetto-db
-    (:generated_key
+    (get-insert-id
      (insert parameters (values [{:problem (:problem params)
                                   :name (:name params)
                                   :rev (inc (parameters-latest-rev (:problem params)
