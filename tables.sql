@@ -30,7 +30,7 @@ CREATE TABLE `analyses` (
   `code` text NOT NULL,
   `caption` text,
   PRIMARY KEY (`analysisid`)
-) ENGINE=InnoDB AUTO_INCREMENT=41 DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -50,7 +50,7 @@ CREATE TABLE `graphs` (
   `width` float DEFAULT NULL,
   `height` float DEFAULT NULL,
   PRIMARY KEY (`graphid`)
-) ENGINE=InnoDB AUTO_INCREMENT=301 DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -72,7 +72,7 @@ CREATE TABLE `parameters` (
   KEY `PROBLEM` (`problem`),
   KEY `NAME` (`name`),
   KEY `REVISION` (`rev`,`paramid`)
-) ENGINE=InnoDB AUTO_INCREMENT=942 DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -87,7 +87,7 @@ CREATE TABLE `run_analyses` (
   `runid` int(11) NOT NULL,
   `analysisid` int(11) NOT NULL,
   PRIMARY KEY (`runanalysisid`)
-) ENGINE=InnoDB AUTO_INCREMENT=241 DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -102,7 +102,7 @@ CREATE TABLE `run_graphs` (
   `runid` int(11) NOT NULL,
   `graphid` int(11) NOT NULL,
   PRIMARY KEY (`rungraphid`)
-) ENGINE=InnoDB AUTO_INCREMENT=2614 DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -133,7 +133,7 @@ CREATE TABLE `runs` (
   `simcount` int(11) NOT NULL DEFAULT '0',
   PRIMARY KEY (`runid`),
   KEY `PARAMS` (`paramid`)
-) ENGINE=InnoDB AUTO_INCREMENT=893 DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -149,7 +149,7 @@ CREATE TABLE `table_fields` (
   `field` varchar(255) NOT NULL,
   `tabletype` enum('comparative','non-comparative','paired') NOT NULL,
   PRIMARY KEY (`tfid`)
-) ENGINE=InnoDB AUTO_INCREMENT=1019 DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -169,7 +169,7 @@ CREATE TABLE `template_analyses` (
   `yfield` varchar(255) DEFAULT NULL,
   `code` text,
   PRIMARY KEY (`templateid`)
-) ENGINE=InnoDB AUTO_INCREMENT=27 DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -200,7 +200,7 @@ CREATE TABLE `template_graphs` (
   `facetvert` varchar(255) DEFAULT NULL,
   `code` text,
   PRIMARY KEY (`templateid`)
-) ENGINE=InnoDB AUTO_INCREMENT=718 DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
 
