@@ -123,7 +123,16 @@
                           (if (and (symbol? form) (not (excluded form))
                                    (not (special-symbol? form))
                                    (or (resolve form) (get &env form)))
-                            (swap! symbols conj form))
+                            ;; use (or (resolve form) form) because
+                            ;; without it, we can have cases where,
+                            ;; e.g., clojure.core/count and count
+                            ;; (unqualified) can both be added to the
+                            ;; set of symbols, but when the macro
+                            ;; output is actually compiled, we get
+                            ;; clojure.core/count and
+                            ;; clojure.core/count which produces an
+                            ;; error, since these are both in a set
+                            (swap! symbols conj (or (resolve form) form)))
                           form)]
     (walk/postwalk param-extractor (macro/mexpand-all body))
     (let [syms @symbols
