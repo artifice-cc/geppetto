@@ -19,3 +19,9 @@
 (defn format-date-ms
   [ms]
   (.format (SimpleDateFormat. "yyyy-MM-dd HH:mm:ss") (Date. (long ms))))
+
+(defn get-insert-id
+  [result]
+  (or (:generated_key result)
+      (:GENERATED_KEY result)
+      (get result (keyword "scope_identity()"))))

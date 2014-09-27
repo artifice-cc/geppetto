@@ -10,7 +10,7 @@
 (defn commit-run
   [run-meta]
   (with-db @geppetto-db
-    (:generated_key (insert runs (values [run-meta])))))
+    (get-insert-id (insert runs (values [run-meta])))))
 
 (defn get-run
   [runid]
