@@ -1,4 +1,4 @@
-(defproject cc.artifice/geppetto "3.0.0-SNAPSHOT"
+(defproject cc.artifice/geppetto "3.0.1"
   :description "Backend support for experimental work."
   :url "http://geppetto.artifice.cc"
   :license {:name "MIT License"
