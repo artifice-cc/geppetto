@@ -8,7 +8,7 @@
                  [org.clojure/tools.macro "0.1.2"]
                  [org.clojure/core.cache "0.6.3"]
                  [myguidingstar/clansi "1.3.0"]
-                 [propertea "1.2.3"]
+                 [cc.artifice/propertea "1.4.1"]
                  [korma "0.3.0-RC5"]
                  [mysql/mysql-connector-java "5.1.6"]
                  [org.apache.commons/commons-math3 "3.0"]
