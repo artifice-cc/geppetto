@@ -8,7 +8,7 @@
   (:use [geppetto.test-fixtures])
   (:require [plumbing.graph :as graph]))
 
-(use-fixtures :each setup-random-seed travis-mysql-db quiet-mode)
+(use-fixtures :each setup-random-seed in-memory-db quiet-mode)
 
 (def g (graph/graph {:sum (paramfnk [x] [a [1 2]] (+ a x))
                      :prod (paramfnk [sum y] [b [3 4]] (* y sum b))}))

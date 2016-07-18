@@ -1,7 +1,7 @@
 (ns geppetto.analysis
   (:require [clojure.string :as str])
   (:require [clojure.set :as set])
-  (:require [incanter.stats :as stats])
+  (:require [geppetto.stats :as stats])
   (:require [plumbing.graph :as graph])
   (:use [geppetto.fn]))
 
@@ -33,7 +33,7 @@
                  (/ between-group-var within-group-var))
         df1 (dec grouped-count)
         df2 (- sample-size grouped-count)]
-    {:f-stat f-stat :p-value (if f-stat (- 1.0 (stats/cdf-f f-stat :df1 df1 :df2 df2)))
+    {:f-stat f-stat :p-value 0.0 ;; removed due to removing incanter: (if f-stat (- 1.0 (stats/cdf-f f-stat :df1 df1 :df2 df2)))
      :means (into {} (map (fn [{:keys [val m]}] [val m]) val-stats))
      :overall-mean overall-mean :val-stats val-stats
      :sample-size sample-size :df1 df1 :df2 df2
