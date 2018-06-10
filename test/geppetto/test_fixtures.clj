@@ -6,7 +6,7 @@
   (:use [geppetto.parameters])
   (:use [geppetto.models])
   (:use [geppetto.random])
-  (:use [korma db core config])
+  (:use [korma db core])
   (:require [taoensso.timbre :as timbre]))
 
 (defn establish-params
@@ -18,11 +18,9 @@
 
 (defn in-memory-db
   [f]
-  (dosync (alter geppetto-db (constantly {:classname "org.h2.Driver"
-                                          :subprotocol "h2"
-                                          :subname "mem:test;DB_CLOSE_DELAY=-1"})))
-  (set-delimiters "")
-  (set-naming {:keys str/lower-case})
+  (dosync (alter geppetto-db (constantly (h2 {:db "mem:test"
+                                              :naming {:keys str/lower-case :fields str/lower-case}
+                                              :delimiters "`"}))))
   (with-db @geppetto-db
     (exec-raw (slurp "tables.sql")))
   (establish-params)
@@ -31,9 +29,9 @@
 (defn travis-mysql-db
   [f]
   (sh "mysql" "-u" "travis" "geppetto_test" :in (slurp "tables.sql"))
-  (dosync (alter geppetto-db (constantly (mysql {:db "geppetto_test" :user "travis" :password ""}))))
-  (set-delimiters "")
-  (set-naming {:keys str/lower-case})
+  (dosync (alter geppetto-db (constantly (mysql {:db "geppetto_test" :user "travis" :password ""
+                                                 :naming {:keys str/lower-case}
+                                                 :delimiters "`"}))))
   (establish-params)
   (f))
 

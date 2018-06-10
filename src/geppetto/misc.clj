@@ -1,6 +1,6 @@
 (ns geppetto.misc
   (:use [korma.db :only [mysql]])
-  (:use [korma.config])
+  ;;(:use [korma.config])
   (:import (java.util Date))
   (:import (java.text SimpleDateFormat))
   (:use [taoensso.timbre]))
@@ -10,9 +10,9 @@
 (defn setup-geppetto
   [dbhost dbport dbname dbuser dbpassword quiet?]
   (if quiet? (set-level! :warn) (set-level! :info))
-  (set-delimiters "`")
   (dosync (alter geppetto-db (constantly (mysql {:db dbname :port dbport :user dbuser
-                                                 :password dbpassword :host dbhost})))))
+                                                 :password dbpassword :host dbhost
+                                                 :delimeters "`"})))))
 
 (defn format-date-ms
   [ms]
