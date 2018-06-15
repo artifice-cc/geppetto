@@ -9,7 +9,7 @@
                  [org.clojure/core.cache "0.6.5"]
                  [myguidingstar/clansi "1.3.0"]
                  [cc.artifice/propertea "1.4.1"]
-                 [korma "0.4.5"]
+                 [org.clojars.ejschoen/korma "0.4.5"]
                  [mysql/mysql-connector-java "6.0.3"]
                  [com.h2database/h2 "1.4.187"]
                  [org.apache.commons/commons-math3 "3.6.1"]
