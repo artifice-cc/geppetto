@@ -11,13 +11,13 @@
                  [cc.artifice/propertea "1.4.1"]
                  [org.clojars.ejschoen/korma "0.4.5"]
                  [mysql/mysql-connector-java "6.0.3"]
-                 [com.h2database/h2 "1.4.187"]
+                 [com.h2database/h2 "1.4.195"]
                  [org.apache.commons/commons-math3 "3.6.1"]
                  [clj-time "0.12.0"]
                  [clojure-csv/clojure-csv "2.0.2"]
                  [com.taoensso/timbre "4.6.0"]
-                 [prismatic/plumbing "0.1.1"]
-                 [prismatic/schema "0.1.6"]]
+                 [prismatic/plumbing "0.5.4"]
+                 [prismatic/schema "1.0.1"]]
   :codox {:sources ["src"]
           :src-dir-uri "http://github.com/artifice-cc/geppetto/blob/master/"
           :src-linenum-anchor-prefix "L"

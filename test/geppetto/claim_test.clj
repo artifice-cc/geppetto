@@ -6,7 +6,7 @@
   (:use [geppetto.test-utils])
   (:use [geppetto.parameters]))
 
-(use-fixtures :each travis-mysql-db quiet-mode)
+(use-fixtures :each in-memory-db quiet-mode)
 
 (deftest test-make-claim
   (let [claim (make-claim tracking-baseline-high-avgprec

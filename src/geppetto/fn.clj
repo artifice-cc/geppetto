@@ -58,14 +58,17 @@
     (let [new-bind (conj bind (vec (concat [:params] (map (comp symbol name)
                                                           (keys params-meta))
                                            [:as 'params])))
-          f (plumbing.fnk.impl/fnk-form name? new-bind body)]
+          [schematized-bind new-body] (macros/extract-arrow-schematized-element &env (vec (apply conj [new-bind] body)))
+          f (plumbing.fnk.impl/fnk-form &env name? schematized-bind new-body &form)]
       `(let [func# ~f]
          (with-meta func# (merge (meta func#) {:params ~params-meta :bindings '~bind}))))))
 
 (defn fnkc-form
-  [fn-name bind body]
-  (let [{:keys [map-sym body-form input-schema]} (plumbing.fnk.impl/letk-input-schema-and-body-form
-                                                  bind [] `(do ~@body))
+  [env fn-name bind body]
+  (let [[schematized-bind new-body] (macros/extract-arrow-schematized-element env
+                                                                              (vec (apply conj [bind] body)))
+        {:keys [map-sym body-form input-schema]} (plumbing.fnk.impl/letk-input-schema-and-body-form
+                                                  env schematized-bind [] `(do ~@new-body))
         schema [input-schema (or (:output-schema (meta bind))
                                  (plumbing.fnk.schema/guess-expr-output-schema (last body)))]]
     (pfnk/fn->fnk
@@ -89,7 +92,7 @@
   (assert (symbol? (first args)))
   (let [[fn-name [bind & body]] [(first args) (next args)]
         new-bind (conj bind 'cache)]
-    (fnkc-form fn-name new-bind body)))
+    (fnkc-form &env fn-name new-bind body)))
 
 (defmacro paramfnkc
   [& args]
@@ -106,7 +109,7 @@
                                                           (keys params-meta))
                                            [:as 'params]))
                          'cache)
-          f (fnkc-form fn-name new-bind body)]
+          f (fnkc-form &env fn-name new-bind body)]
       `(let [func# ~f]
          (with-meta func# (merge (meta func#) {:params ~params-meta :bindings '~bind}))))))
 

@@ -6,7 +6,7 @@
   (:use [geppetto.parameters])
   (:use [geppetto.test-fixtures]))
 
-(use-fixtures :each setup-random-seed travis-mysql-db quiet-mode)
+(use-fixtures :each setup-random-seed in-memory-db quiet-mode)
 
 (def run-fn (fn [comparative? params]
               [{:result (* (:Foo params) (:Bar params))}]))
