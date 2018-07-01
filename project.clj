@@ -1,4 +1,4 @@
-(defproject cc.artifice/geppetto "3.2.0"
+(defproject cc.artifice/geppetto "3.2.1"
   :description "Backend support for experimental work."
   :url "http://geppetto.artifice.cc"
   :license {:name "MIT License"
@@ -17,7 +17,7 @@
                  [clojure-csv/clojure-csv "2.0.2"]
                  [com.taoensso/timbre "4.6.0"]
                  [prismatic/plumbing "0.5.4"]
-                 [prismatic/schema "1.0.1"]]
+                 [prismatic/schema "1.1.9"]]
   :codox {:sources ["src"]
           :src-dir-uri "http://github.com/artifice-cc/geppetto/blob/master/"
           :src-linenum-anchor-prefix "L"
