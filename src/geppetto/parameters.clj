@@ -6,13 +6,17 @@
 
 (defn get-params
   ([paramid]
-     (with-db @geppetto-db
-       (first (select parameters (where {:paramid paramid})))))
+   (with-db @geppetto-db
+     (update-in (first (select parameters (where {:paramid paramid})))
+                [:control]
+                text-field)))
   ([problem name]
-     (with-db @geppetto-db
-       (first (select parameters
-                      (where {:name name :problem problem})
-                      (order :rev :DESC) (limit 1))))))
+   (with-db @geppetto-db
+     (update-in (first (select parameters
+                               (where {:name name :problem problem})
+                               (order :rev :DESC) (limit 1)))
+                [:control]
+                text-field))))
 
 (defn parameters-latest-rev
   [problem name]
@@ -27,10 +31,12 @@
 (defn parameters-latest
   [problem name]
   (with-db @geppetto-db
-    (first (select parameters
-                   (where {:problem problem :name name})
-                   (order :rev :DESC)
-                   (limit 1)))))
+    (update-in (first (select parameters
+                              (where {:problem problem :name name})
+                              (order :rev :DESC)
+                              (limit 1)))
+               [:control]
+               text-field)))
 
 (defn parameters-latest?
   [paramid]
@@ -107,7 +113,11 @@
         ;; so if fetching the Problem/Params format did not work,
         ;; try to read it as clojure code
         params (if name (get-params problem name)
-                   (read-string params-string))]
+                   (try (read-string params-string)
+                        (catch Exception e
+                          (println "***** Error reading params string")
+                          (println "*****" params-string)
+                          (.printStackTrace e))))]
     (when params
       (if (:comparison params)
         (-> params

@@ -15,21 +15,23 @@
 (defn get-run
   [runid]
   (with-db @geppetto-db
-    (first (select runs
-                   (with parameters)
-                   (where {:runid runid})
-                   (fields :runid :starttime :endtime :username
-                           :seed :nthreads :repetitions :simcount
-                           :pwd :hostname :recorddir :datadir :project
-                           :commit :commitdate :commitmsg :branch
-                           :runs.paramid :parameters.name
-                           :parameters.problem :parameters.description
-                           :parameters.control :parameters.comparison)))))
+    (let [run (first (select runs
+                             (with parameters)
+                             (where {:runid runid})
+                             (fields :runid :starttime :endtime :username
+                                     :seed :nthreads :repetitions :simcount
+                                     :pwd :hostname :recorddir :datadir :project
+                                     :commit :commitdate :commitmsg :branch
+                                     :runs.paramid :parameters.name
+                                     :parameters.problem :parameters.description
+                                     :parameters.control :parameters.comparison)))]
+      (update-in run [:control] text-field))))
 
 (defn list-runs
   []
   (with-db @geppetto-db
-    (select runs (with parameters))))
+    (map #(update-in % [:control] text-field)
+         (select runs (with parameters)))))
 
 (defn delete-run
   [runid]
