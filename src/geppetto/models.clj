@@ -1,4 +1,5 @@
 (ns geppetto.models
+  (:refer-clojure :exclude [update])
   (:use [korma.core]))
 
 (defentity parameters

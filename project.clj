@@ -1,9 +1,9 @@
-(defproject cc.artifice/geppetto "3.2.1"
+(defproject cc.artifice/geppetto "3.2.2"
   :description "Backend support for experimental work."
   :url "http://geppetto.artifice.cc"
   :license {:name "MIT License"
             :url "http://opensource.org/licenses/MIT"}
-  :dependencies [[org.clojure/clojure "1.6.0"]
+  :dependencies [[org.clojure/clojure "1.8.0"]
                  [org.clojure/tools.cli "0.3.5"]
                  [org.clojure/tools.macro "0.1.5"]
                  [org.clojure/core.cache "0.6.5"]
@@ -18,6 +18,8 @@
                  [com.taoensso/timbre "4.6.0"]
                  [prismatic/plumbing "0.5.4"]
                  [prismatic/schema "1.1.9"]]
+  :profiles {:dev {:dependencies [[org.clojure/tools.namespace "0.2.11"]
+                                  [org.clojure/tools.nrepl "0.2.13"]]}}
   :codox {:sources ["src"]
           :src-dir-uri "http://github.com/artifice-cc/geppetto/blob/master/"
           :src-linenum-anchor-prefix "L"

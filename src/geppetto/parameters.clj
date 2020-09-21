@@ -1,4 +1,5 @@
 (ns geppetto.parameters
+  (:refer-clojure :exclude [update])
   (:require [clojure.string :as str])
   (:use [korma db core])
   (:use [geppetto.models])
