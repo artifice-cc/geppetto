@@ -23,7 +23,7 @@ DROP TABLE IF EXISTS `analyses`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `analyses` (
-  `analysisid` int(11) NOT NULL AUTO_INCREMENT,
+  `analysisid` int NOT NULL AUTO_INCREMENT,
   `name` varchar(255) DEFAULT NULL,
   `problems` varchar(1024) DEFAULT NULL,
   `resultstype` enum('non-comparative','comparative') NOT NULL,
@@ -41,7 +41,7 @@ DROP TABLE IF EXISTS `graphs`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `graphs` (
-  `graphid` int(11) NOT NULL AUTO_INCREMENT,
+  `graphid` int NOT NULL AUTO_INCREMENT,
   `name` varchar(255) NOT NULL,
   `problems` varchar(1024) NOT NULL,
   `resultstype` enum('comparative','non-comparative') NOT NULL,
@@ -61,10 +61,10 @@ DROP TABLE IF EXISTS `parameters`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `parameters` (
-  `paramid` int(11) NOT NULL AUTO_INCREMENT,
+  `paramid` int NOT NULL AUTO_INCREMENT,
   `problem` varchar(255) NOT NULL,
   `name` varchar(255) NOT NULL,
-  `rev` int(11) NOT NULL DEFAULT '1',
+  `rev` int NOT NULL DEFAULT '1',
   `comparison` text,
   `control` text,
   `description` text,
@@ -83,9 +83,9 @@ DROP TABLE IF EXISTS `run_analyses`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `run_analyses` (
-  `runanalysisid` int(11) NOT NULL AUTO_INCREMENT,
-  `runid` int(11) NOT NULL,
-  `analysisid` int(11) NOT NULL,
+  `runanalysisid` int NOT NULL AUTO_INCREMENT,
+  `runid` int NOT NULL,
+  `analysisid` int NOT NULL,
   PRIMARY KEY (`runanalysisid`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -98,9 +98,9 @@ DROP TABLE IF EXISTS `run_graphs`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `run_graphs` (
-  `rungraphid` int(11) NOT NULL AUTO_INCREMENT,
-  `runid` int(11) NOT NULL,
-  `graphid` int(11) NOT NULL,
+  `rungraphid` int NOT NULL AUTO_INCREMENT,
+  `runid` int NOT NULL,
+  `graphid` int NOT NULL,
   PRIMARY KEY (`rungraphid`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -113,8 +113,8 @@ DROP TABLE IF EXISTS `runs`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `runs` (
-  `runid` int(11) NOT NULL AUTO_INCREMENT,
-  `paramid` int(11) NOT NULL,
+  `runid` int NOT NULL AUTO_INCREMENT,
+  `paramid` int NOT NULL,
   `branch` varchar(255) NOT NULL,
   `commit` varchar(255) NOT NULL,
   `commitmsg` text NOT NULL,
@@ -123,14 +123,14 @@ CREATE TABLE `runs` (
   `starttime` datetime NOT NULL,
   `endtime` datetime NOT NULL,
   `hostname` varchar(1024) NOT NULL,
-  `nthreads` int(11) NOT NULL,
+  `nthreads` int NOT NULL,
   `pwd` varchar(1024) NOT NULL,
   `recorddir` varchar(1024) NOT NULL,
-  `repetitions` int(11) NOT NULL,
-  `seed` int(11) NOT NULL,
+  `repetitions` int NOT NULL,
+  `seed` int NOT NULL,
   `username` varchar(255) NOT NULL,
   `project` varchar(255) DEFAULT NULL,
-  `simcount` int(11) NOT NULL DEFAULT '0',
+  `simcount` int NOT NULL DEFAULT '0',
   PRIMARY KEY (`runid`),
   KEY `PARAMS` (`paramid`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
@@ -144,8 +144,8 @@ DROP TABLE IF EXISTS `table_fields`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `table_fields` (
-  `tfid` int(11) NOT NULL AUTO_INCREMENT,
-  `runid` int(11) NOT NULL,
+  `tfid` int NOT NULL AUTO_INCREMENT,
+  `runid` int NOT NULL,
   `field` varchar(255) NOT NULL,
   `tabletype` enum('comparative','non-comparative','paired') NOT NULL,
   PRIMARY KEY (`tfid`)
@@ -160,8 +160,8 @@ DROP TABLE IF EXISTS `template_analyses`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `template_analyses` (
-  `templateid` int(11) NOT NULL AUTO_INCREMENT,
-  `runid` int(11) NOT NULL,
+  `templateid` int NOT NULL AUTO_INCREMENT,
+  `runid` int NOT NULL,
   `name` varchar(255) NOT NULL,
   `caption` text,
   `template` varchar(255) NOT NULL,
@@ -180,8 +180,8 @@ DROP TABLE IF EXISTS `template_graphs`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `template_graphs` (
-  `templateid` int(11) NOT NULL AUTO_INCREMENT,
-  `runid` int(11) NOT NULL,
+  `templateid` int NOT NULL AUTO_INCREMENT,
+  `runid` int NOT NULL,
   `name` varchar(255) NOT NULL,
   `caption` text,
   `width` float NOT NULL DEFAULT '7',
