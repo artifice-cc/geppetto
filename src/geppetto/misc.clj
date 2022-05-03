@@ -22,4 +22,5 @@
   [result]
   (or (:generated_key result)
       (:GENERATED_KEY result)
-      (get result (keyword "scope_identity()"))))
+      (get result (keyword "scope_identity()"))
+      (first (vals result))))
