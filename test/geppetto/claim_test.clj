@@ -9,7 +9,7 @@
 (use-fixtures :each in-memory-db quiet-mode)
 
 (deftest test-make-claim
-  (let [claim (make-claim tracking-baseline-high-avgprec
+  (let [claim (make-claim 'tracking-baseline-high-avgprec
                           (parameters "Tracking/test-1")
                           (verify {:control
                                    ((> (geppetto.stats/mean :_AvgPrec) 0.75)
@@ -21,12 +21,10 @@
     (is (= '(> (geppetto.stats/mean :_AvgCoverage) 0.75)
            (:code (second (:control (:verify claim))))))
     (is (= false (do (dosync (alter results
-                                    (constantly [{:control {:AvgPrec 1.0}}
-                                                 {:control {:AvgPrec 0.0}}])))
+                                    (constantly {:control [{:AvgPrec 1.0} {:AvgPrec 0.0}]})))
                      ((:result (first (:control (:verify claim))))))))
     (is (= true (do (dosync (alter results
-                                   (constantly [{:control {:AvgPrec 1.0}}
-                                                {:control {:AvgPrec 2.0}}])))
+                                   (constantly {:control [{:AvgPrec 1.0} {:AvgPrec 2.0}]})))
                     ((:result (first (:control (:verify claim))))))))))
 
 (comment
@@ -34,7 +32,7 @@
   
   (deftest test-evaluate-claim
     (let [claim (make-claim
-                 tracking-baseline-high-avgprec
+                 'tracking-baseline-high-avgprec
                  (parameters "Testing/test-1")
                  (verify {:control
                           ((< (geppetto.stats/mean :_a) 1.0)
@@ -49,7 +47,7 @@
 
   (deftest test-evaluate-claim-fail
     (let [claim (make-claim
-                 tracking-baseline-high-avgprec
+                 'tracking-baseline-high-avgprec
                  (parameters "Testing/test-1")
                  (verify {:control
                           ((< (geppetto.stats/mean :_a) 1.0)
@@ -65,7 +63,7 @@
 
 (deftest test-evaluate-claim-comparative
   (let [claim (make-claim
-               tracking-baseline-high-avgprec
+               'tracking-baseline-high-avgprec
                (parameters {:control {:foo 1} :comparison {:foo 2}})
                (verify {:comparative
                         ((> (geppetto.stats/mean :_diffA) 0.5)

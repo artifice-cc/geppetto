@@ -103,7 +103,7 @@
 (defn read-params-string
   [s]
   (let [parsed (if (string? s) (read-string s) s)]
-    (into {} (for [[k v] (seq parsed)]
+    (into {} (for [[k v] (sort-by first (seq parsed))]
                [k (if (list? v) (handle-params-fn v) v)]))))
 
 (defn read-params

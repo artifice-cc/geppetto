@@ -15,16 +15,13 @@
   [resultstype form]
   (if (and (keyword? form) (re-matches #"^_.*" (name form)))
     (let [k (keyword (str/replace (name form) #"^_" ""))]
-      `(map (fn [r#] (get r# ~k))
-          (map (fn [rs-alltypes#]
-               (get rs-alltypes# ~resultstype))
-             @results)))
+      `(map (fn [r#] (get r# ~k)) (get @results ~resultstype)))
     form))
 
 (defmacro make-claim
   [claim-name & opts]
   (apply merge
-         `{:name '~claim-name}
+         `{:name ~claim-name}
          (for [[opt & params] opts]
            (cond (= 'parameters opt)
                  (let [p (first params)]
@@ -38,9 +35,10 @@
                      [:control :comparison :comparative]
                      (for [resultstype [:control :comparison :comparative]]
                        (vec
-                        (for [v (get (first params) resultstype)]
-                          (let [result-fn (postwalk #(replace-keys resultstype %) v)]
-                            `{:code '~v
+                        (for [verify-fn (get (first params) resultstype)]
+                          ;; in verify-fn, replace mentions of :_resultKey with function that gets :resultKey from results
+                          (let [result-fn (postwalk #(replace-keys resultstype %) verify-fn)]
+                            `{:code '~verify-fn
                               :result (fn [] ~result-fn)})))))}))))
 
 (defn evaluate-claim

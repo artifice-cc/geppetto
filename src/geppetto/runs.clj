@@ -78,8 +78,8 @@
         csv-file (format "%s/%s-results.csv" recorddir (name resultstype))]
     (try (let [results (read-csv (str/split (slurp csv-file) #"\n"))]
            (if fields (map (fn [row] (select-keys row fields)) results)
-               results))
-         (catch Exception e (println e)))))
+             results))
+         (catch Exception _ nil))))
 
 (defn get-results
   [runid resultstype selected-fields]

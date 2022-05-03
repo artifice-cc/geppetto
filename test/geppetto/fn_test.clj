@@ -80,7 +80,6 @@
         f1 (compile-graph graph/eager-compile g1)
         c (atom (cache/lru-cache-factory {}))]
     (let [result (f1 {:x 1 :y 2 :z 3 :cache c})]
-      (prn result)
       (is (= (* (+ 1 2) 3) (:bar result)))
       (is (= (/ 1 2) (:baz result))))
     (is (= @c {{:fn-name :foo :args {:y 2 :x 1}} 3
