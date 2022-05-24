@@ -1,4 +1,5 @@
 (ns geppetto.fn
+  (:require [clojure.set :as set])
   (:require [clojure.walk :as walk])
   (:require [clojure.tools.macro :as macro])
   (:require [plumbing.core])
@@ -7,6 +8,8 @@
   (:require [plumbing.fnk.impl :as fnk-impl])
   (:require [plumbing.fnk.pfnk :as pfnk])
   (:require [clojure.core.cache :as cache])
+  (:require [loom.graph :as loom])
+  (:require [loom.alg :as loom.alg])
   (:use [geppetto.parameters]))
 
 (defn fn-params
@@ -143,3 +146,36 @@
       `(with-meta (fn ~new-bind ~@body)
          {:bindings '~bind
           :params (reduce merge (map (fn [~'sym] (geppetto.fn/all-fn-params ~'sym)) ~syms))}))))
+
+(defn graph-edges [g]
+  (for [[k node] g
+        :when (and (fn? node) (try (pfnk/input-schema node) (catch RuntimeException _)))
+        parent (keys (pfnk/input-schema node))
+        :when (keyword? parent)]
+    [parent k]))
+
+(defn generate-fn-path
+  "Given a function graph and a goal (e.g., :fulltext), and a set of inputs we already have,
+  determine what other inputs are required to arrive at the goal."
+  [g goals have-set]
+  {:pre [(and (set? goals) (set? have-set))]}
+  (let [goals2 (filter (fn [g] (not (have-set g))) goals)]
+    (if (empty? goals2)
+      {:need #{}
+       :path []}
+      (let [g-reverse (apply loom/digraph (map reverse (graph-edges g)))
+            ;; insert dummy node that points to goals so we can easily find a path for multiple goals
+            root (gensym)
+            g2 (apply loom/add-edges g-reverse (map (fn [goal] [root goal]) goals2))
+            need (atom #{})
+            ;; note, (set) will force evaluation (non-lazy), which is needed since we are using an atom
+            traversal (set (loom.alg/bf-traverse g2 root
+                                                   :when (fn [n predecessor depth]
+                                                           (if (or (have-set n) (empty? (loom/successors g2 n)))
+                                                             (do (swap! need conj n)
+                                                                 false)
+                                                             true))))]
+        {:need @need
+         ;; traversal was breadth-first, which isn't right, so use traveral to see which nodes we hit from a topological sort
+         :path (filter (fn [n] (traversal n)) (reverse (loom.alg/topsort g-reverse)))}))))
+

@@ -8,7 +8,6 @@
             [clojure.string :as str])
   (:import (java.util HashSet) (java.io File))
   (:use [plumbing.core])
-  (:use [plumbing.fnk.pfnk :only [input-schema]])
   (:use [geppetto.parameters])
   (:use [geppetto.fn]))
 
@@ -71,13 +70,6 @@
        folder file-stem g
        (set (apply concat edge-list))
        my-node-key-fn my-label-fn #(for [e (get edge-map %)] [nil e])))))
-
-(defn graph-edges [g]
-  (for [[k node] g
-        :when (and (fn? node) (try (input-schema node) (catch RuntimeException _)))
-        parent (keys (input-schema node))
-        :when (nil? (get-in (meta node) [:params parent]))]
-    [parent k]))
 
 (defn graphviz-graph
   "Generate folder/file-stem.dot and folder/file-stem.png representing

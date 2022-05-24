@@ -7,6 +7,7 @@
                  [org.clojure/tools.macro "0.1.5"]
                  [org.clojure/core.cache "1.0.207"]
                  [myguidingstar/clansi "1.3.0"]
+                 [aysylu/loom "1.0.2"]
                  [cc.artifice/propertea "1.4.1"]
                  [org.clojars.ejschoen/korma "0.4.5"]
                  [mysql/mysql-connector-java "8.0.16" :exclusions [com.google.protobuf/protobuf-java]]

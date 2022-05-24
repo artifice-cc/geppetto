@@ -1,8 +1,12 @@
 (ns geppetto.fn-test
   (:use [clojure.test])
   (:require [plumbing.graph :as graph])
+  (:require [plumbing.core :as p])
   (:require [clojure.core.cache :as cache])
-  (:use [geppetto.fn]))
+  (:require [loom.graph :as loom])
+  (:require [loom.io :as loom.io])
+  (:use [geppetto.fn])
+  (:use [geppetto.fnviz]))
 
 (deftest test-fn-params
   (let [g1 (paramfnk [x y] [a [1 2 3] b (range 4 7)] (* x y a b))
@@ -92,3 +96,28 @@
     (is (= (f1 {:x 1 :y 2 :cache c :params {:foo 11 :bar 13}})
            (+ 1 2 11 13)))
     (is (= @c {{:fn-name :f1 :args {:x 1 :y 2 :params {:foo 11 :bar 13}}} (+ 1 2 11 13)}))))
+
+(deftest test-deps
+  (let [g {:fulltext (p/fnk [f] "fulltext")
+           :title (p/fnk [f] "title")
+           :summary (p/fnk [fulltext title] "summary")
+           :concept-tags (p/fnk [fulltext title] "concept-tags")}
+        f (compile-graph graph/eager-compile g)]
+    (is (= {:need #{:f} :path [:fulltext]} (generate-fn-path g #{:fulltext} #{})))
+    (is (= {:need #{:f} :path [:fulltext]} (generate-fn-path g #{:fulltext} #{:f})))
+    (is (= {:need #{:f} :path [:fulltext :title :concept-tags :summary]} (generate-fn-path g #{:fulltext :concept-tags :summary} #{:f})))
+    (is (= {:need #{:fulltext :f} :path [:title :summary]} (generate-fn-path g #{:summary} #{:fulltext})))
+    (is (= {:need #{:fulltext :f} :path [:title :summary]} (generate-fn-path g #{:summary} #{:f :fulltext})))
+    (is (= {:need #{:fulltext :f} :path [:title :concept-tags]} (generate-fn-path g #{:concept-tags} #{:f :fulltext :summary})))
+    (is (= {:need #{:fulltext :title} :path [:concept-tags]} (generate-fn-path g #{:concept-tags} #{:fulltext :title})))
+    (is (= {:need #{:fulltext :title} :path [:concept-tags]} (generate-fn-path g #{:concept-tags} #{:fulltext :title :summary})))
+    (is (= {:need #{:fulltext :title} :path [:concept-tags]} (generate-fn-path g #{:concept-tags :title} #{:fulltext :title :summary})))
+    (is (= {:need #{:f} :path [:fulltext :title :summary]} (generate-fn-path g #{:summary} #{})))
+    (is (= {:need #{:f} :path [:fulltext :title :concept-tags :summary]} (generate-fn-path g #{:summary :concept-tags} #{})))
+    (is (= {:need #{:f} :path [:fulltext :title :concept-tags]} (generate-fn-path g #{:summary :concept-tags} #{:summary})))
+    (is (= {:need #{} :path []} (generate-fn-path g #{:summary} #{:summary})))
+    (is (= {:need #{} :path []} (generate-fn-path g #{:summary} #{:title :concept-tags :summary})))
+    (is (= {:need #{} :path []} (generate-fn-path g #{:summary :title} #{:title :concept-tags :summary})))
+    (is (= {:need #{} :path []} (generate-fn-path g #{:summary :title :concept-tags} #{:title :concept-tags :summary})))
+    ))
+
