@@ -44,13 +44,20 @@
 
 (defmacro paramfnk
   "Usage: (paramfnk [x y] [p1 [1 2 3] p2 [true false]] (do stuff...));
+   OR: (paramfnk [x y] [p1 [1 2 3] p2 [true false]] :when {:cond (boolean-fn...) :else default-val} (do stuff...));
    OR: (paramfnk [x y] compiled-paramfnk-graph (do stuff...)).
-   In the second case, the params are inherited from compiled-paramfnk-graph,
+   In the last case, the params are inherited from compiled-paramfnk-graph,
    which must be defined with (def) and not (let) -- perhaps this can be fixed someday."
   [& args]
-  (let [[name? [bind params & body]] (if (symbol? (first args))
-                                       (macros/extract-arrow-schematized-element &env args)
-                                       [nil args])
+  (let [[name? [bind params & body-tmp]] (if (symbol? (first args))
+                                           (macros/extract-arrow-schematized-element &env args)
+                                           [nil args])
+        [when-map body] (if (= :when (first body-tmp))
+                           [(second body-tmp) (rest (rest body-tmp))]
+                           [nil body-tmp])
+        when-body (if when-map
+                    `((if ~(:cond when-map) (do ~@body) ~(:else when-map)))
+                    body)
         params-vals (partition 2 params)
         params-meta (into {} (for [[param vals] params-vals]
                                [(keyword param) `(vec ~vals)]))]
@@ -61,10 +68,13 @@
     (let [new-bind (conj bind (vec (concat [:params] (map (comp symbol name)
                                                           (keys params-meta))
                                            [:as 'params])))
-          [schematized-bind new-body] (macros/extract-arrow-schematized-element &env (vec (apply conj [new-bind] body)))
+          [schematized-bind new-body] (macros/extract-arrow-schematized-element &env (vec (apply conj [new-bind] when-body)))
           f (plumbing.fnk.impl/fnk-form &env name? schematized-bind new-body &form)]
       `(let [func# ~f]
-         (with-meta func# (merge (meta func#) {:params ~params-meta :bindings '~bind}))))))
+         (with-meta func# (merge (meta func#)
+                                 {:params ~params-meta
+                                  :bindings '~bind
+                                  :when '~when-map}))))))
 
 (defn fnkc-form
   [env fn-name bind body]

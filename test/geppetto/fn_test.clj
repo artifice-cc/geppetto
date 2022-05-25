@@ -71,6 +71,23 @@
            (all-fn-params f)))
     (is (= '[x y] (:bindings (meta f))))))
 
+(deftest test-paramfnk-when
+  (let [g1 (paramfnk [x y] [a [1 2] c [3 4]] :when {:cond (> x 5) :else 0} (* x y a c))
+        did-compute? (atom {})
+        g2 {:x (paramfnk [y] [a [1 2]] :when {:cond (> y 5) :else 1} (swap! did-compute? assoc :x true) (+ y a))
+            :z (paramfnk [x y] [b [3 4]] :when {:cond (< x 2) :else -1} (swap! did-compute? assoc :z true) (+ x y b))}
+        f1 (compile-graph graph/eager-compile g1)
+        f2 (compile-graph graph/eager-compile g2)]
+    (is (= 24 (f1 {:x 6 :y 1 :params {:a 1 :c 4}})))
+    (is (= 0 (f1 {:x 2 :y 1 :params {:a 1 :c 4}})))
+    (reset! did-compute? {})
+    (is (= 1 (:x (f2 {:x 6 :y 1 :params {:a 1 :b 5 :c 4}}))))
+    (is (not (:x @did-compute?)))
+    (reset! did-compute? {})
+    (is (= 7 (:z (f2 {:x 6 :y 1 :params {:a 1 :b 5 :c 4}}))))
+    (is (not (:x @did-compute?)))
+    (is (:z @did-compute?))))
+
 (deftest test-fnkc
   (let [f1 (fnkc f1 [x y] (+ x y))
         c (atom (cache/lru-cache-factory {}))]
@@ -101,10 +118,10 @@
   (let [g {:fulltext (p/fnk [f] "fulltext")
            :title (p/fnk [f] "title")
            :summary (p/fnk [fulltext title] "summary")
-           :concept-tags (p/fnk [fulltext title] "concept-tags")}
-        f (compile-graph graph/eager-compile g)]
+           :concept-tags (p/fnk [fulltext title] "concept-tags")}]
     (is (= {:need #{:f} :path [:fulltext]} (generate-fn-path g #{:fulltext} #{})))
     (is (= {:need #{:f} :path [:fulltext]} (generate-fn-path g #{:fulltext} #{:f})))
+    (is (= {:need #{:f} :path [:title]} (generate-fn-path g #{:title} #{:f :fulltext :summary :concept-tags})))
     (is (= {:need #{:f} :path [:fulltext :title :concept-tags :summary]} (generate-fn-path g #{:fulltext :concept-tags :summary} #{:f})))
     (is (= {:need #{:fulltext :f} :path [:title :summary]} (generate-fn-path g #{:summary} #{:fulltext})))
     (is (= {:need #{:fulltext :f} :path [:title :summary]} (generate-fn-path g #{:summary} #{:f :fulltext})))
