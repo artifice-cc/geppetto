@@ -12,9 +12,13 @@
   (let [g1 (paramfnk [x y] [a [1 2 3] b (range 4 7)] (* x y a b))
         g2 {:result (paramfnk [x y] [a [1 2 3] b [4 5 6]] (* x y a b))}
         g3 {:result g1}
+        g4 (paramfnk [x y] [] (* x y))
+        g5 {:x (paramfnk [y] [] 0) ;; cycle, bad graph
+            :y (paramfnk [x] [] 0)}
         f1 (compile-graph graph/eager-compile g1)
         f2 (compile-graph graph/eager-compile g2)
-        f3 (compile-graph graph/eager-compile g3)]
+        f3 (compile-graph graph/eager-compile g3)
+        f4 (compile-graph graph/eager-compile g4)]
     (is (= (* 1 2 3 4) (f1 {:x 1 :y 2 :params {:a 3 :b 4}})))
     (is (= (* 1 2 3 4) (:result (f2 {:x 1 :y 2 :params {:a 3 :b 4}}))))
     (is (= (* 1 2 3 4) (:result (f3 {:x 1 :y 2 :params {:a 3 :b 4}}))))
@@ -31,7 +35,9 @@
     (is (= [:a :b] (fn-params f3)))
     (is (= [1 2 3] (fn-param-range f3 :a)))
     (is (= [4 5 6] (fn-param-range f3 :b)))
-    (is (= '[x y] (:bindings (meta g1))))))
+    (is (= '[x y] (:bindings (meta g1))))
+    (is (= 12 (f4 {:x 3 :y 4 :params {}})))
+    (is (thrown? java.lang.IllegalArgumentException (compile-graph graph/eager-compile g5)))))
 
 (deftest test-all-fn-params
   (let [g1 (paramfnk [x y] [a [1 2] b [3 4]] (* x y a b))
@@ -72,10 +78,16 @@
     (is (= '[x y] (:bindings (meta f))))))
 
 (deftest test-paramfnk-when
-  (let [g1 (paramfnk [x y] [a [1 2] c [3 4]] :when {:cond (> x 5) :else 0} (* x y a c))
+  (let [g1 (paramfnk [x y] [a [1 2] c [3 4]]
+                     :when {:cond (> x 5) :else 0}
+                     (* x y a c))
         did-compute? (atom {})
-        g2 {:x (paramfnk [y] [a [1 2]] :when {:cond (> y 5) :else 1} (swap! did-compute? assoc :x true) (+ y a))
-            :z (paramfnk [x y] [b [3 4]] :when {:cond (< x 2) :else -1} (swap! did-compute? assoc :z true) (+ x y b))}
+        g2 {:x (paramfnk [y] [a [1 2]]
+                         :when {:cond (> y 5) :else 1}
+                         (swap! did-compute? assoc :x true) (+ y a))
+            :z (paramfnk [x y] [b [3 4]]
+                         :when {:cond (< x 2) :else -1}
+                         (swap! did-compute? assoc :z true) (+ x y b))}
         f1 (compile-graph graph/eager-compile g1)
         f2 (compile-graph graph/eager-compile g2)]
     (is (= 24 (f1 {:x 6 :y 1 :params {:a 1 :c 4}})))
@@ -87,6 +99,66 @@
     (is (= 7 (:z (f2 {:x 6 :y 1 :params {:a 1 :b 5 :c 4}}))))
     (is (not (:x @did-compute?)))
     (is (:z @did-compute?))))
+
+(deftest test-paramfnk-hashes-1
+  (let [did-compute? (atom {})
+        g1 {:x (paramfnk-hashed [a] [] (swap! did-compute? assoc :x true) (+ a 2))
+            :y (paramfnk-hashed [x] [] (swap! did-compute? assoc :y true) (+ x 3))
+            :z (paramfnk-hashed [x y] [] (swap! did-compute? assoc :z true) (+ x y 4))}
+        f1 (compile-graph graph/eager-compile g1)]
+    (is (= 2 (:x (f1 {:a 0 :params {} :hashes {:x (hash 2) :y (hash 5) :z (hash 11)}}))))
+    (is (get @did-compute? :x))
+    (is (not (get @did-compute? :y)))
+    (is (not (get @did-compute? :z)))))
+
+(deftest test-paramfnk-hashes-2
+  (let [did-compute? (atom {})
+        g1 {:x (paramfnk-hashed [a] [] (swap! did-compute? assoc :x true) (+ a 2))
+            :y (paramfnk-hashed [x] [] (swap! did-compute? assoc :y true) (+ x 3))
+            :z (paramfnk-hashed [y] [] (swap! did-compute? assoc :z true) (+ y 4))}
+        f1 (compile-graph graph/eager-compile g1)
+        result (f1 {:a 0 :params {} :hashes {:y (hash 5) :z (hash 11)}})]
+    ;; x is computed, but its output doesn't match the hash (no hash provided)
+    ;; so y is recomputed, and its output does match;
+    ;; thus, z is not recomputed
+    (is (= 2 (:x result)))
+    (is (= 5 (:y result)))
+    (is (and (delay? (:z result)) (not (realized? (:z result)))))
+    (is (get @did-compute? :x))
+    (is (get @did-compute? :y))
+    (is (not (get @did-compute? :z)))))
+
+(deftest test-paramfnk-hashes-3
+  (let [did-compute? (atom {})
+        g1 {:x (paramfnk-hashed [a] [] (swap! did-compute? assoc :x true) (+ a 2))
+            :y (paramfnk-hashed [x] [] (swap! did-compute? assoc :y true) (+ x 3))
+            :z (paramfnk-hashed [x y] [] (swap! did-compute? assoc :z true) (+ x y 4))}
+        f1 (compile-graph graph/eager-compile g1)
+        result (f1 {:a 0 :params {} :hashes {:y (hash 5) :z (hash 11)}})]
+    ;; x is computed, but its output doesn't match the hash (no hash provided)
+    ;; so y is recomputed, and its output does match;
+    ;; thus, z is recomputed since it depends on x
+    (is (= 2 (:x result)))
+    (is (= 5 (:y result)))
+    (is (= 11 (:z result)))
+    (is (get @did-compute? :x))
+    (is (get @did-compute? :y))
+    (is (get @did-compute? :z))))
+
+(deftest test-paramfnk-hashes-4
+  (let [did-compute? (atom {})
+        g1 {:x (paramfnk-hashed [a] [] (swap! did-compute? assoc :x true) (+ a 2))
+            :y (paramfnk-hashed [x] [] (swap! did-compute? assoc :y true) (+ x 3))
+            :z (paramfnk-hashed [x y] [] (swap! did-compute? assoc :z true) (+ x y 4))}
+        f1 (compile-graph graph/eager-compile g1)
+        result (f1 {:a 0 :params {} :hashes {}})]
+    ;; everybody is recomputed because there are no hashes
+    (is (= 2 (:x result)))
+    (is (= 5 (:y result)))
+    (is (= 11 (:z result)))
+    (is (get @did-compute? :x))
+    (is (get @did-compute? :y))
+    (is (get @did-compute? :z))))
 
 (deftest test-fnkc
   (let [f1 (fnkc f1 [x y] (+ x y))
@@ -136,5 +208,8 @@
     (is (= {:need #{} :path []} (generate-fn-path g #{:summary} #{:title :concept-tags :summary})))
     (is (= {:need #{} :path []} (generate-fn-path g #{:summary :title} #{:title :concept-tags :summary})))
     (is (= {:need #{} :path []} (generate-fn-path g #{:summary :title :concept-tags} #{:title :concept-tags :summary})))
-    ))
+    ;; cycle, bad graph
+    (is (thrown? java.lang.IllegalArgumentException
+                 (compile-graph graph/eager-compile {:fulltext (p/fnk [summary] nil)
+                                                     :summary (p/fnk [fulltext] nil)})))))
 

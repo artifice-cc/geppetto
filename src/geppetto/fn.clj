@@ -65,16 +65,58 @@
     (assert (even? (count params)))
     (assert (apply distinct? (concat bind (keys params-meta))))
     (assert (every? coll? (map second params-vals)))
-    (let [new-bind (conj bind (vec (concat [:params] (map (comp symbol name)
-                                                          (keys params-meta))
-                                           [:as 'params])))
-          [schematized-bind new-body] (macros/extract-arrow-schematized-element &env (vec (apply conj [new-bind] when-body)))
+    (let [new-bind (conj bind
+                         (vec (concat [:params] (map (comp symbol name)
+                                                     (keys params-meta))
+                                      [:as 'params])))
+          [schematized-bind new-body] (macros/extract-arrow-schematized-element
+                                        &env (vec (apply conj [new-bind] when-body)))
           f (plumbing.fnk.impl/fnk-form &env name? schematized-bind new-body &form)]
       `(let [func# ~f]
-         (with-meta func# (merge (meta func#)
-                                 {:params ~params-meta
-                                  :bindings '~bind
-                                  :when '~when-map}))))))
+         (vary-meta func# merge {:params ~params-meta
+                                 :bindings '~bind
+                                 :when '~when-map})))))
+
+(defmacro paramfnk-hashed
+  [& args]
+  (let [[name? [bind params & body-tmp]] (if (symbol? (first args))
+                                           (macros/extract-arrow-schematized-element &env args)
+                                           [nil args])
+        [when-map body] (if (= :when (first body-tmp))
+                           [(second body-tmp) (rest (rest body-tmp))]
+                           [nil body-tmp])
+        when-body (if when-map
+                    `((if ~(:cond when-map) (do ~@body) ~(:else when-map)))
+                    body)
+        delay-bind-let (vec (mapcat (fn [b] [b `(if (delay? ~b) @~b ~b)]) bind))
+        delay-body `((let ~delay-bind-let ~@when-body))
+        delay-check (map (fn [b] `(or (delay? ~b) (= (get ~'hashes ~(keyword b)) (hash ~b)))) bind)
+        hash-body `((if (not-empty ~'hashes)
+                      (if (and ~@delay-check)
+                        ;; no need to compute this, unless some downstream fn needs this value, which presumably
+                        ;; hasn't been provided so must be computed
+                        (delay ~@delay-body)
+                        ~@delay-body)
+                      (do ~@when-body)))
+        params-vals (partition 2 params)
+        params-meta (into {} (for [[param vals] params-vals]
+                               [(keyword param) `(vec ~vals)]))]
+    (assert (vector? params))
+    (assert (even? (count params)))
+    (assert (apply distinct? (concat bind (keys params-meta))))
+    (assert (every? coll? (map second params-vals)))
+    (let [new-bind (conj bind
+                         (vec (concat [:params] (map (comp symbol name)
+                                                     (keys params-meta))
+                                      [:as 'params]))
+                         'hashes)
+          [schematized-bind new-body] (macros/extract-arrow-schematized-element
+                                        &env (vec (apply conj [new-bind] hash-body)))
+          f (plumbing.fnk.impl/fnk-form &env name? schematized-bind new-body &form)]
+      `(let [func# ~f]
+         (vary-meta func# merge {:params ~params-meta
+                                 :bindings '~bind
+                                 :when '~when-map})))))
 
 (defn fnkc-form
   [env fn-name bind body]
@@ -129,7 +171,7 @@
 (defn compile-graph
   [compiler g]
   (let [f (compiler g)]
-    (with-meta f (assoc (meta f) :params (all-fn-params g)))))
+    (vary-meta f assoc :params (all-fn-params g))))
 
 (defmacro fn-with-params
   [bind & body]
